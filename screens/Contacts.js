@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Text, View, StyleSheet, Image, Dimensions, PermissionsAndroid } from 'react-native';
 import Contacts from 'react-native-contacts';
+import MyHeader from '../components/MyHeader.js'
 
 export default class App extends Component {
   constructor() {
@@ -24,7 +25,9 @@ export default class App extends Component {
     )
       .then(Contacts.getAll)
       .then(contacts => {
-
+        this.setState({
+          contacts: contacts
+        })
       })
   }
 
@@ -49,18 +52,29 @@ export default class App extends Component {
   componentDidMount() {
     this.getDimensions();
     setInterval(this.incrementCounter, 1000);
+    //this.getPermissions();
   }
 
   render() {
     return (
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        {this.state.counter < 10 ? (
+
+        {this.state.counter < 3 ? (
           <Image
-            source={require(this.state.image)}
-            style={{ height: 50, width: 50, alignSelf: 'center' }}
+            source={require(
+              '../assets/into-1.png'
+            )}
+            style={{ height: '100%', width: '100%', alignSelf: 'center' }}
           />
         ) : (
-            <Text style={{ alignSelf: 'center' }}>hi</Text>
+            <View style={{ flex: 1 }}>
+              <MyHeader title="INBO CHAT" navigation={this.props.navigation} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ alignSelf: 'center' }}>
+                  lo
+            </Text>
+              </View>
+            </View>
           )
 
         }

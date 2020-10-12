@@ -8,18 +8,33 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "expo": "~36.0.0",
-    "expo-status-bar": "~1.0.2",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-39.0.3.tar.gz",
+    "@react-native-community/masked-view": "0.1.5",
+    "expo": "^36.0.0",
+    "expo-image-picker": "^9.1.1",
+    "expo-permissions": "^9.3.0",
+    "expo-status-bar": "^1.0.2",
+    "firebase": "^7.17.2",
+    "react": "16.9.0",
+    "react-dom": "16.9.0",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-36.0.1.tar.gz",
     "react-native-contacts": "^6.0.0",
-    "react-native-gesture-handler": "^1.8.0",
-    "react-native-web": "~0.13.12",
-    "react-navigation": "^4.4.2"
+    "react-native-elements": "^2.2.1",
+    "react-native-gesture-handler": "~1.5.0",
+    "react-native-google-books": "^1.0.4",
+    "react-native-reanimated": "~1.4.0",
+    "react-native-responsive-fontsize": "^0.4.3",
+    "react-native-safe-area-context": "0.6.0",
+    "react-native-screens": "2.0.0-alpha.12",
+    "react-native-swipe-list-view": "^3.2.4",
+    "react-native-web": "^0.11.7",
+    "react-navigation": "^4.4.0",
+    "react-navigation-drawer": "^2.5.0",
+    "react-navigation-stack": "^2.8.2",
+    "react-navigation-tabs": "^2.9.0"
   },
   "devDependencies": {
-    "@babel/core": "~7.9.0"
+    "@babel/core": "^7.8.6",
+    "babel-preset-expo": "^8.0.0"
   },
   "private": true
 }
