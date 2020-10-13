@@ -8,6 +8,7 @@ import {
     ScrollView,
     TouchableOpacity,
     Alert,
+    Modal
 } from "react-native";
 import { Card } from "react-native-elements";
 import MyHeader from "../components/MyHeader";
@@ -25,7 +26,7 @@ export default class SettingScreen extends Component {
             about: "",
             contact: "",
             docId: "",
-            isModalVisible: "false",
+            isModalVisible: false,
             about: "",
         };
     }
@@ -65,87 +66,109 @@ export default class SettingScreen extends Component {
     }
 
     showModal = () => {
-        <View style={styles.formContainer}>
-            <View
-                style={{
-                    flex: 0.66,
-                    padding: RFValue(10),
-                }}
+        return (
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={this.state.isModalVisible}
             >
-                <Text style={styles.label}>First Name </Text>
-                <TextInput
-                    style={styles.formTextInput}
-                    placeholder={"First Name"}
-                    onChangeText={(text) => {
-                        this.setState({
-                            firstName: text,
-                        });
-                    }}
-                    value={this.state.firstName}
-                />
+                <View style={styles.formContainer}>
+                    <View
+                        style={{
+                            flex: 0.66,
+                            padding: RFValue(10),
+                        }}
+                    >
+                        <Text style={styles.label}>First Name </Text>
+                        <TextInput
+                            style={styles.formTextInput}
+                            placeholder={"First Name"}
+                            onChangeText={(text) => {
+                                this.setState({
+                                    firstName: text,
+                                });
+                            }}
+                            value={this.state.firstName}
+                        />
 
-                <Text style={styles.label}>Last Name </Text>
-                <TextInput
-                    style={styles.formTextInput}
-                    placeholder={"Last Name"}
-                    onChangeText={(text) => {
-                        this.setState({
-                            lastName: text,
-                        });
-                    }}
-                    value={this.state.lastName}
-                />
+                        <Text style={styles.label}>Last Name </Text>
+                        <TextInput
+                            style={styles.formTextInput}
+                            placeholder={"Last Name"}
+                            onChangeText={(text) => {
+                                this.setState({
+                                    lastName: text,
+                                });
+                            }}
+                            value={this.state.lastName}
+                        />
 
-                <Text style={styles.label}>ABOUT </Text>
-                <TextInput
-                    style={styles.formTextInput}
-                    placeholder={"ABOUT"}
-                    onChangeText={(text) => {
-                        this.setState({
-                            about: text,
-                        });
-                    }}
-                    value={this.state.lastName}
-                />
+                        <Text style={styles.label}>ABOUT </Text>
+                        <TextInput
+                            style={styles.formTextInput}
+                            placeholder={"ABOUT"}
+                            onChangeText={(text) => {
+                                this.setState({
+                                    about: text,
+                                });
+                            }}
+                            value={this.state.lastName}
+                        />
 
-                <Text style={styles.label}>Contact NO</Text>
-                <TextInput
-                    style={styles.formTextInput}
-                    placeholder={"Contact"}
-                    maxLength={10}
-                    keyboardType={"numeric"}
-                    onChangeText={(text) => {
-                        this.setState({
-                            contact: text,
-                        });
-                    }}
-                    value={this.state.contact}
-                />
-            </View>
-            <View style={styles.buttonView}>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => {
-                        this.updateUserDetails();
-                    }}
-                >
-                    <Text style={styles.buttonText}>Save</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+                        <Text style={styles.label}>Contact NO</Text>
+                        <TextInput
+                            style={styles.formTextInput}
+                            placeholder={"Contact"}
+                            maxLength={10}
+                            keyboardType={"numeric"}
+                            onChangeText={(text) => {
+                                this.setState({
+                                    contact: text,
+                                });
+                            }}
+                            value={this.state.contact}
+                        />
+                    </View>
+                    <View style={styles.buttonView}>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => {
+                                this.updateUserDetails();
+                                this.setState({ isModalVisible: false })
+                            }
+                            }
+                        >
+                            <Text style={styles.buttonText}>Save</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        );
     }
 
     render() {
         return (
             <View style={{ flex: 1 }}>
                 <View style={{ flex: 0.12 }}>
-                    <MyHeader title="Settings" navigation={this.props.navigation} />
+                    <MyHeader title="Profile" navigation={this.props.navigation} />
                 </View>
-                <Text style={styles.Text}>First Name: {this.state.firstName} </Text>
-                <Text style={styles.Text}>Last Name: {this.state.lastName} </Text>
-                <Text style={styles.Text}>Contact No: {this.state.contact_no} </Text>
-                <Text style={styles.Text}>EmailId: {this.state.emailId} </Text>
-                <Text style={styles.Text}>about: {this.state.about} </Text>
+                <View>
+                    {this.showModal()}
+                    <TouchableOpacity
+                        onPress={() => this.setState({ isModalVisible: true })}>
+                        <Text style={styles.Text1}>Edit Profile</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.Text}>First Name:</Text>
+                    <Text style={styles.Text}> {this.state.firstName} </Text>
+                    <Text style={styles.Text}>Last Name:</Text>
+                    <Text style={styles.Text}> {this.state.lastName} </Text>
+                    <Text style={styles.Text}>Contact No:</Text>
+                    <Text style={styles.Text}> {this.state.contact_no} </Text>
+                    <Text style={styles.Text}>EmailId:</Text>
+                    <Text style={styles.Text}> {this.state.emailId} </Text>
+                    <Text style={styles.Text}>about:</Text>
+                    <Text style={styles.Text}> {this.state.about} </Text>
+                </View>
             </View>
         );
     }
@@ -212,5 +235,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginLeft: RFValue(20),
         alignItems: "center",
+    },
+    Text1: {
+        fontSize: RFValue(18),
+        color: "#717D7E",
+        fontWeight: 'bold',
+        marginLeft: RFValue(20),
+        alignItems: 'flex-end',
     }
 });
