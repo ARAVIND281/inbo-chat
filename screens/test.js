@@ -10,8 +10,6 @@ import {
     ScrollView,
     Alert,
     FlatList,
-    SafeAreaView,
-    Button
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import MyHeader from '../components/MyHeader.js';
@@ -19,9 +17,7 @@ import { Icon, Input, ListItem } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
 import firebase from 'firebase'
 import db from '../config';
-import { GiftedChat, Bubble, Actions, ActionsProps, } from 'react-native-gifted-chat';
-import NavBar, { NavTitle, NavButton } from 'react-native-nav';
-import * as ImagePicker from "expo-image-picker";
+import { GiftedChat } from 'react-native-gifted-chat';
 
 export default class ChatScreen extends Component {
     uid = '';
@@ -42,16 +38,41 @@ export default class ChatScreen extends Component {
             docId: '',
             chats: [],
             messages: [],
-            item: undefined,
-            image: '',
-            filePath: '',
-            fileData: '',
-            fileUri: ''
         }
     }
 
-    uid = '';
-    messagesRef = null;
+
+
+
+    getChat = () => {
+        db.collection(this.state.fid)
+            .orderBy('createdAt', 'desc')
+            .onSnapshot((snapshot) => {
+                var chats = snapshot.docs.map((doc) => doc.data())
+                this.setState({
+                    chats: chats
+                });
+            })
+    }
+
+    sendText = async (massage) => {
+        await db.collection(this.state.fid).add({
+            massage: massage,
+            sender: this.state.userid,
+            reciever: this.state.fEmail,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        })
+    }
+
+    renderItem = ({ item, i }) => {
+        return (
+            <ListItem
+                key={i}
+                title={item.massage}
+                bottomDivider
+            />
+        )
+    }
 
     getUserDetails = () => {
         db.collection("users")
@@ -72,51 +93,15 @@ export default class ChatScreen extends Component {
             });
     };
 
+    keyExtractor = (index) => index.toString()
+
     setUid(value) {
         this.uid = value;
     }
     getUid() {
         return this.uid;
     }
-    ////
-    //
-    //
-    //if you face the issue then try to make a standalone app to test the images
-    //  
-    //
-    //
-     handlePickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        console.log(result);
-
-        if (!result.cancelled) {
-            setImage(result.uri);
-        }
-
-    }
-
-    renderActions() {
-        return (
-            <Actions
-                options={{
-                    ['Send Image']: this.handlePickImage,
-                }}
-                icon={() => (
-                    <Icon name={'attachment'} size={28} color={'red'} />
-                )}
-                onSend={args => console.log(args)}
-            />
-        )
-    }
-
-
-
+    // retrieve the messages from the Backend
     loadMessages = (where, callback) => {
         this.messagesRef = firebase.database().ref(where);
         this.messagesRef.off();
@@ -134,7 +119,7 @@ export default class ChatScreen extends Component {
         };
         this.messagesRef.limitToLast(20).on('child_added', onReceive);
     };
-
+    // send the message to the Backend
     sendMessage(message) {
         for (let i = 0; i < message.length; i++) {
             this.messagesRef.push({
@@ -145,51 +130,9 @@ export default class ChatScreen extends Component {
         }
     }
 
-    render() {
-        return (
-            <View style={{ flex: 1, backgroundColor: '#ffefff' }}>
-
-                <SafeAreaView style={{ backgroundColor: '#f5f5f5' }}>
-                    <NavBar>
-                        <NavButton />
-                        <NavTitle>
-                            INBO CHAT{'\n'}
-                            <Text style={{ fontSize: 10, color: '#aaa' }}>
-                                hi
-          </Text>
-                        </NavTitle>
-                        <NavButton />
-                    </NavBar>
-                </SafeAreaView>
-
-                <GiftedChat
-                    messages={this.state.messages}
-                    onSend={(message) => {
-                        this.sendMessage(message);
-                    }}
-                    user={{
-                        _id: this.state.userid,
-                        name: this.state.firstName + '' + this.state.lastName,
-                        avatar: this.state.image
-                    }}
-                    scrollToBottom
-                    alwaysShowSend={true}
-                    renderUsernameOnMessage={true}
-                    scrollToBottomComponent={() => (
-                        <Icon name='arrow-down' type='font-awesome-5' />
-                    )}
-                    isTyping={true}
-                    isLoadingEarlier={true}
-                    timeTextStyle={{ left: { color: 'green' }, right: { color: 'yellow' } }}
-                    isTyping={true}
-                    infiniteScroll
-                    renderActions={this.renderActions}
-
-                />
-            </View>
-        );
-    }
     componentDidMount() {
+        this.getUserDetails();
+        //this.getChat();
         this.loadMessages(this.state.fid, (message) => {
             this.setState((previousState) => {
                 return {
@@ -197,6 +140,28 @@ export default class ChatScreen extends Component {
                 };
             });
         });
-        this.getUserDetails();
+
+    }
+
+    render() {
+        return (
+            <View>
+
+
+                <View style={{marginBottom:100}}>
+                    <GiftedChat
+                        messages={this.state.messages}
+                        onSend={(message) => {
+                            this.sendMessage(message);
+                        }}
+                        user={{
+                            _id: this.state.userid,
+                            name: this.state.firstName+''+this.state.lastName,
+                        }}
+                    />
+                </View>
+            </View>
+        );
     }
 }
+
