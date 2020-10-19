@@ -78,13 +78,7 @@ export default class ChatScreen extends Component {
     getUid() {
         return this.uid;
     }
-    ////
-    //
-    //
-    //if you face the issue then try to make a standalone app to test the images
-    //  
-    //
-    //
+
      handlePickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
