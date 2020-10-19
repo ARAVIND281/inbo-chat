@@ -15,7 +15,7 @@ import {
 import db from "../config";
 import firebase from "firebase";
 
-import { Icon } from "react-native-elements";
+import { Icon, Input } from "react-native-elements";
 import { RFValue } from "react-native-responsive-fontsize";
 
 export default class WelcomeScreen extends Component {
@@ -24,10 +24,10 @@ export default class WelcomeScreen extends Component {
         this.state = {
             emailId: "",
             password: "",
-            firstName: "",
+            firstName: "INBO",
             lastName: "",
-            about: "",
-            contact_no: "",
+            about: "INBO-CHAT-USER",
+            contact: "",
             confirmPassword: "",
             isModalVisible: "false",
         };
@@ -44,10 +44,10 @@ export default class WelcomeScreen extends Component {
                     db.collection("users").add({
                         first_name: this.state.firstName,
                         last_name: this.state.lastName,
-                        contact_no: this.state.contact_No,
+                        contact: this.state.contact,
                         email_id: this.state.emailId,
-                        about:this.state.about
-
+                        about: this.state.about,
+                        imageurl: 'https://firebasestorage.googleapis.com/v0/b/inbo-chat-a81c7.appspot.com/o/user_profiles%2Fchat%20logo-2.png?alt=media&token=b75e4704-5f31-4893-aaeb-4f4e5720d3ea',
                     });
                     return Alert.alert("User Added Successfully", "", [
                         {
@@ -57,6 +57,7 @@ export default class WelcomeScreen extends Component {
                     ]);
                 })
                 .catch((error) => {
+                    var errorCode = error.code;
                     var errorMessage = error.message;
                     return Alert.alert(errorMessage);
                 });
@@ -68,12 +69,13 @@ export default class WelcomeScreen extends Component {
             .auth()
             .signInWithEmailAndPassword(emailId, password)
             .then(() => {
-                this.props.navigation.navigate("Contacts");
+                this.props.navigation.navigate("Chat");
             })
             .catch((error) => {
                 var errorCode = error.code;
                 var errorMessage = error.message;
                 return Alert.alert(errorMessage);
+
             });
     };
 
@@ -90,42 +92,114 @@ export default class WelcomeScreen extends Component {
                     </View>
                     <View style={{ flex: 0.95 }}>
                         <Text style={styles.label}>First Name </Text>
-                        <TextInput
-                            style={styles.formInput}
+                        <Input
+                            style={styles.loginBox}
                             placeholder={"First Name"}
                             onChangeText={(text) => {
                                 this.setState({
                                     firstName: text,
                                 });
                             }}
+                            leftIcon={
+                                <Icon
+                                    name='id-badge'
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                    type="font-awesome-5"
+                                />
+                            }
                         />
 
                         <Text style={styles.label}>Last Name </Text>
-                        <TextInput
-                            style={styles.formInput}
+                        <Input
+                            style={styles.loginBox}
                             placeholder={"Last Name"}
                             onChangeText={(text) => {
                                 this.setState({
                                     lastName: text,
                                 });
                             }}
+                            leftIcon={
+                                <Icon
+                                    name='id-badge'
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                    type="font-awesome-5"
+                                />
+                            }
                         />
 
-                        <Text style={styles.label}>Contact No </Text>
-                        <TextInput
-                            style={styles.formInput}
-                            placeholder={"Contact No"}
-                            keyboardType={"numeric"}
+                        <Text style={styles.label}>Contact </Text>
+
+                        {this.state.contact.length !== 10 ? (
+                            <Input
+                                style={styles.loginBox}
+                                placeholder={"Contact"}
+                                maxLength={10}
+                                keyboardType={"numeric"}
+                                onChangeText={(text) => {
+                                    this.setState({
+                                        contact: text,
+                                    });
+                                }}
+                                leftIcon={
+                                    <Icon
+                                        name='phone'
+                                        size={RFValue(35)}
+                                        color='#fabf10'
+                                        type="font-awesome-5"
+                                    />
+                                }
+                                errorMessage='Enter a Valid Phone Number'
+                            />
+                        ) : (
+                                <Input
+                                    style={styles.loginBox}
+                                    placeholder={"Contact"}
+                                    maxLength={10}
+                                    keyboardType={"numeric"}
+                                    onChangeText={(text) => {
+                                        this.setState({
+                                            contact: text,
+                                        });
+                                    }}
+                                    leftIcon={
+                                        <Icon
+                                            name='phone'
+                                            size={RFValue(35)}
+                                            color='#fabf10'
+                                            type="font-awesome-5"
+                                        />
+                                    }
+                                />
+                            )
+                        }
+
+
+                        <Text style={styles.label}> About </Text>
+                        <Input
+                            style={styles.loginBox}
+                            placeholder={"About"}
+                            multiline={true}
                             onChangeText={(text) => {
                                 this.setState({
-                                    contact_no: text,
+                                    about: text,
                                 });
                             }}
+                            leftIcon={
+                                <Icon
+                                    name='address-card'
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                    type="font-awesome-5"
+                                />
+                            }
                         />
 
                         <Text style={styles.label}>Email </Text>
-                        <TextInput
-                            style={styles.formInput}
+                        <Input
+                            style={styles.loginBox}
+
                             placeholder={"Email"}
                             keyboardType={"email-address"}
                             onChangeText={(text) => {
@@ -133,22 +207,19 @@ export default class WelcomeScreen extends Component {
                                     emailId: text,
                                 });
                             }}
-                        />
-
-                        <Text style={styles.label}>About </Text>
-                        <TextInput
-                            style={styles.formInput}
-                            placeholder={"About"}
-                            onChangeText={(text) => {
-                                this.setState({
-                                    about: text,
-                                });
-                            }}
+                            leftIcon={
+                                <Icon
+                                    name='envelope-open-text'
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                    type="font-awesome-5"
+                                />
+                            }
                         />
 
                         <Text style={styles.label}> Password </Text>
-                        <TextInput
-                            style={styles.formInput}
+                        <Input
+                            style={styles.loginBox}
                             placeholder={"Password"}
                             secureTextEntry={true}
                             onChangeText={(text) => {
@@ -156,11 +227,19 @@ export default class WelcomeScreen extends Component {
                                     password: text,
                                 });
                             }}
+                            leftIcon={
+                                <Icon
+                                    name='user-lock'
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                    type="font-awesome-5"
+                                />
+                            }
                         />
 
                         <Text style={styles.label}>Confirm Password</Text>
-                        <TextInput
-                            style={styles.formInput}
+                        <Input
+                            style={styles.loginBox}
                             placeholder={"Confrim Password"}
                             secureTextEntry={true}
                             onChangeText={(text) => {
@@ -168,18 +247,31 @@ export default class WelcomeScreen extends Component {
                                     confirmPassword: text,
                                 });
                             }}
+                            leftIcon={
+                                <Icon
+                                    name='key'
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                    type="font-awesome-5"
+                                />
+                            }
                         />
                     </View>
 
                     <View style={{ flex: 0.2, alignItems: 'center' }}>
                         <TouchableOpacity
                             style={styles.registerButton}
-                            onPress={() =>
-                                this.userSignUp(
-                                    this.state.emailId,
-                                    this.state.password,
-                                    this.state.confirmPassword
-                                )
+                            onPress={() => {
+                                this.state.contact.length !== 10 ? (
+                                    Alert.alert('Enter a Valid Phone Number')
+                                ) : (
+                                        this.userSignUp(
+                                            this.state.emailId,
+                                            this.state.password,
+                                            this.state.confirmPassword
+                                        ))
+                            }
+
                             }
                         >
                             <Text style={styles.registerButtonText}>Register</Text>
@@ -190,13 +282,12 @@ export default class WelcomeScreen extends Component {
                                 this.setState({ isModalVisible: false });
                             }}
                         >
-                            Cancel
-              </Text>
+                            Cancel</Text>
                     </View>
                 </ScrollView>
             </Modal>
         );
-    };
+    }
     render() {
         return (
             <View style={styles.container}>
@@ -212,25 +303,42 @@ export default class WelcomeScreen extends Component {
                         />
                     </View>
                 </View>
-                <View style={{ flex: 0.45, marginTop: RFValue(150) }}>
+                <View style={{ flex: 0.45, marginTop: 150 }}>
 
                     <View style={styles.TextInput}>
-                        <TextInput
+                        <Input
                             style={styles.loginBox}
                             placeholder="abc@example.com"
-                            placeholderTextColor="gray"
+                            placeholderTextColor="#fabf10"
+                            leftIcon={
+                                <Icon
+                                    name='envelope-open-text'
+                                    size={RFValue(35)}
+                                    color='black'
+                                    type="font-awesome-5"
+                                />
+                            }
                             keyboardType="email-address"
                             onChangeText={(text) => {
                                 this.setState({
                                     emailId: text,
                                 });
                             }}
+
                         />
-                        <TextInput
+                        <Input
                             style={[styles.loginBox, { marginTop: RFValue(15) }]}
                             secureTextEntry={true}
                             placeholder="Enter Password"
-                            placeholderTextColor="gray"
+                            placeholderTextColor="#fabf10"
+                            leftIcon={
+                                <Icon
+                                    name='user-lock'
+                                    size={RFValue(30)}
+                                    color='black'
+                                    type="font-awesome-5"
+                                />
+                            }
                             onChangeText={(text) => {
                                 this.setState({
                                     password: text,
@@ -238,7 +346,7 @@ export default class WelcomeScreen extends Component {
                             }}
                         />
                     </View>
-                    <View style={{ flex: 0.5, alignItems: "center", marginTop: 30 }}>
+                    <View style={{ flex: 0.5, alignItems: "center", marginTop: 50 }}>
                         <TouchableOpacity
                             style={styles.button}
                             onPress={() => {
@@ -254,7 +362,6 @@ export default class WelcomeScreen extends Component {
                         >
                             <Text style={styles.buttonText}>SignUp</Text>
                         </TouchableOpacity>
-
                     </View>
                 </View>
             </View>
@@ -298,7 +405,7 @@ const styles = StyleSheet.create({
         fontSize: RFValue(20),
     },
     label: {
-        fontSize: RFValue(13),
+        fontSize: RFValue(17),
         color: "#717D7E",
         fontWeight: 'bold',
         paddingLeft: RFValue(10),

@@ -4,17 +4,13 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ImageBackground,
-  Platform,
+  Image
 } from "react-native";
 import { DrawerItems } from "react-navigation-drawer";
 import { Avatar } from "react-native-elements";
-import * as ImagePicker from "expo-image-picker";
-import * as Permissions from "expo-permissions";
 import firebase from "firebase";
 import db from "../config";
 import { Icon } from "react-native-elements";
-
 import { RFValue } from "react-native-responsive-fontsize";
 
 export default class SideBar extends Component {
@@ -25,32 +21,6 @@ export default class SideBar extends Component {
     docId: "",
   };
 
-  selectPicture = async () => {
-    const { cancelled, uri } = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!cancelled) {
-      this.uploadImage(uri, this.state.userId);
-    }
-  };
-
-  uploadImage = async (uri, imageName) => {
-    var response = await fetch(uri);
-    var blob = await response.blob();
-
-    var ref = firebase
-      .storage()
-      .ref()
-      .child("user_profiles/" + imageName);
-
-    return ref.put(blob).then((response) => {
-      this.fetchImage(imageName);
-    });
-  };
 
   fetchImage = (imageName) => {
     var storageRef = firebase
@@ -75,6 +45,7 @@ export default class SideBar extends Component {
         querySnapshot.forEach((doc) => {
           this.setState({
             name: doc.data().first_name + " " + doc.data().last_name,
+            about:doc.data().about,
             docId: doc.id,
             image: doc.data().image,
           });
@@ -92,19 +63,12 @@ export default class SideBar extends Component {
       <View style={{ flex: 1 }}>
         <View
           style={{
-            flex: 0.3,
+            flex: 0.2,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "#32867d",
+            backgroundColor: "#a901ff",
           }}
         >
-          <Avatar
-            rounded
-            source={{
-              uri: this.state.image,
-            }}
-            size={"xlarge"}
-          />
 
           <Text
             style={{
@@ -116,8 +80,18 @@ export default class SideBar extends Component {
           >
             {this.state.name}
           </Text>
+          <Text
+            style={{
+              fontWeight: "300",
+              fontSize: RFValue(16),
+              color: "#aaaaaa",
+              padding: RFValue(5),
+            }}
+          >
+            {this.state.about}
+          </Text>
         </View>
-        <View style={{ flex: 0.6 }}>
+        <View style={{ flex: 0.7 }}>
           <DrawerItems {...this.props} />
         </View>
         <View style={{ flex: 0.1 }}>
@@ -133,9 +107,9 @@ export default class SideBar extends Component {
             }}
           >
             <Icon
-              name="logout"
-              type="antdesign"
-              size={RFValue(20)}
+              name="sign-out-alt"
+              type="font-awesome-5"
+              size={RFValue(35)}
               iconStyle={{ paddingLeft: RFValue(10) }}
             />
 

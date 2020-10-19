@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { Text, View } from 'react-native';
-import Contacts from './screens/Contacts';
+import { AppTabNavigator } from './components/AppTabNavigator'
 import { createAppContainer, createSwitchNavigator, } from 'react-navigation';
-import WelcomeScreen from './screens/WelcomeScreen'
+import WelcomeScreen from './screens/WelcomeScreen';
+import { AppDrawerNavigator } from './components/AppDrawerNavigator';
 
 export default function App() {
   return (
@@ -12,7 +13,8 @@ export default function App() {
 
 const switchNavigator = createSwitchNavigator({
   WelcomeScreen: { screen: WelcomeScreen },
-  Contacts: { screen: Contacts },
+  Drawer: { screen: AppDrawerNavigator },
+  Bottomtab:{screen:AppTabNavigator},
 })
 
 const AppContainer = createAppContainer(switchNavigator);

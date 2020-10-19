@@ -1,31 +1,28 @@
 import React from 'react';
-import {createDrawerNavigator} from 'react-navigation-drawer';
-import { AppTabNavigator } from './AppTabNavigator'
-import SideBar  from './SideBar';
+import { createDrawerNavigator } from 'react-navigation-drawer';
+import SideBar from './SideBar';
 import SettingScreen from '../screens/SettingScreen';
-import Chat from '../screens/Contacts'
-
-import {Icon} from 'react-native-elements';
+import { AppTabNavigator } from './AppTabNavigator';
+import { Icon } from 'react-native-elements';
 
 export const AppDrawerNavigator = createDrawerNavigator({
-    Chat : {
-    screen : Chat,
-    navigationOptions:{
-      drawerIcon : <Icon name="stack-exchange" type ="font-awesome" />,
-      drawerLabel : "Chat"
+  Home: {
+    screen: AppTabNavigator,
+    navigationOptions: {
+      drawerIcon: <Icon name="home" type="font-awesome" />
     }
   },
-  Setting : {
-    screen : SettingScreen,
-    navigationOptions:{
-      drawerIcon : <Icon name="user-cog" type ="fontawesome5" />,
-      drawerLabel : "Setting"
+  Setting: {
+    screen: SettingScreen,
+    navigationOptions: {
+      drawerIcon: <Icon name="user-circle" type="font-awesome-5" solid={true}/>,
+      drawerLabel: "Profile"
     }
   }
 },
   {
-    contentComponent:SideBar
+    contentComponent: SideBar
   },
   {
-    initialRouteName : 'Chat'
+    initialRouteName: 'Chat'
   })
