@@ -13,10 +13,13 @@ import {
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import MyHeader from '../components/MyHeader.js';
-import { Icon, Input, ListItem } from 'react-native-elements';
+import { Icon, Input, ListItem, Avatar } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
-import firebase from 'firebase'
-import db from '../config'
+import firebase from 'firebase';
+import db from '../config';
+import * as ImagePicker from "expo-image-picker";
+import * as Permissions from "expo-permissions";
+
 
 export default class GroupScreen extends Component {
 
@@ -43,25 +46,72 @@ export default class GroupScreen extends Component {
             jgAbout: '',
             jgCode: '',
             gdocId: '',
-            groups: []
+            groups: [],
+            image: '#',
+            isSelectImageModal: false,
+            refgCode: ''
         };
     }
+
+    selectPicture = async () => {
+        const { cancelled, uri } = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!cancelled) {
+            this.uploadImage(uri, this.state.refgCode);
+        }
+    };
+
+    uploadImage = async (uri, imageName) => {
+        var response = await fetch(uri);
+        var blob = await response.blob();
+
+        var ref = firebase
+            .storage()
+            .ref()
+            .child("group_profiles/" + imageName);
+
+        return ref.put(blob).then((response) => {
+            this.fetchImage(imageName);
+        });
+    };
+
+    fetchImage = (imageName) => {
+        var storageRef = firebase
+            .storage()
+            .ref()
+            .child("group_profiles/" + imageName);
+
+        storageRef
+            .getDownloadURL()
+            .then((url) => {
+                this.setState({ image: url });
+            })
+            .catch((error) => {
+                this.setState({ image: "#" });
+                Alert.alert(error)
+            });
+    };
 
     createUniqueId() {
         return Math.random().toString(36).substring(7);
     }
 
-    addGrope = async (gName, gAbout) => {
-        var id = this.createUniqueId()
-        await db.collection(gName + 'groupabout').add({
+    addGrope = async (gName, gAbout, id) => {
+        await db.collection(id + 'groupabout').add({
             name: gName,
             about: gAbout,
             created_by: this.state.userid,
-            grope_code: id
-        })
-        this.addGropeMember(gName)
-        this.addUserGroup(gName, gAbout)
-        this.addinGroup(gName, gAbout, id)
+            group_code: id
+        }),
+            this.addGropeMember(id),
+            this.addUserGroup(gName, gAbout, id),
+            this.addinGroup(gName, gAbout, id),
+        Alert.alert('GROUP ADDED ')
     }
 
     addinGroup = async (gName, gAbout, id) => {
@@ -78,14 +128,16 @@ export default class GroupScreen extends Component {
             name: this.state.name,
             contact: this.state.contact,
             about: this.state.about,
-            userid: this.state.userid
+            userid: this.state.userid,
+            grope_code:gName
         })
     }
 
-    addUserGroup = async (gName, gAbout) => {
+    addUserGroup = async (gName, gAbout, id) => {
         await db.collection(this.state.userid + "group").add({
             group_name: gName,
-            group_about: gAbout
+            group_about: gAbout,
+            group_code: id
         })
     }
 
@@ -101,22 +153,23 @@ export default class GroupScreen extends Component {
                         jgAbout: data.about,
                         gdocId: doc.id,
                     });
-                    this.addinUserGroup(this.state.jgName, this.state.jgAbout)
-                    this.addinGroupMember(this.state.jgName)
+                    this.addinUserGroup(this.state.jgName, this.state.jgAbout,jgCode)
+                    this.addinGroupMember(jgCode)
                     Alert.alert('joined Group Successfully')
                 });
             });
     }
 
-    addinUserGroup = async (jgName, jgAbout) => {
+    addinUserGroup = async (jgName, jgAbout,id) => {
         await db.collection(this.state.userid + "group").add({
             group_name: jgName,
-            group_about: jgAbout
+            group_about: jgAbout,
+            group_code: id
         })
     }
 
-    addinGroupMember = async (jgName) => {
-        await db.collection(jgName + 'groupmember').add({
+    addinGroupMember = async (id) => {
+        await db.collection(id + 'groupmember').add({
             name: this.state.name,
             contact: this.state.contact,
             about: this.state.about,
@@ -307,6 +360,87 @@ export default class GroupScreen extends Component {
         );
     }
 
+    selectImageModal = () => {
+        return (
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={this.state.isSelectImageModal}
+            >
+                <ScrollView style={styles.scrollview}>
+                    <View style={styles.signupView}>
+                        <Text style={styles.signupText}>SELECT GROUP ICON</Text>
+                    </View>
+                    <View
+                        style={{
+                            flex: 0.3,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            marginTop: 20
+                        }}
+                    >
+
+                        <Avatar
+                            rounded
+                            source={{
+                                uri: this.state.image,
+                            }}
+                            size={RFValue(200)}
+                            onPress={() => this.selectPicture()}
+                            //title={this.state.gName}
+                            showEditButton
+                        />
+
+
+                        <View style={{ marginTop: -30, alignItems: 'flex-end', marginLeft: RFValue(133) }}>
+                            <Icon name='camera-retro' type='font-awesome-5' color="#fabf10" solid={true} />
+                        </View>
+
+                        <Text
+                            style={{
+                                fontWeight: "300",
+                                fontSize: RFValue(20),
+                                color: "#000",
+                                padding: RFValue(10),
+                            }}
+                        >
+                            {this.state.gName}
+                        </Text>
+                    </View>
+                    <View style={{ flex: 0.2, alignItems: 'center' }}>
+                        <TouchableOpacity
+                            style={styles.registerButton}
+                            onPress={() => {
+                                {
+                                    this.state.image !== '#' ? (
+                                        this.addGrope(this.state.gName, this.state.gAbout, this.state.refgCode),
+                                        this.setState({
+                                            isSelectImageModal: false
+                                        })
+                                    ) : (
+                                            Alert.alert('SELECT IMAGE I you selected iMAGE Please till Image apper')
+                                        )
+                                }
+                            }
+
+                            }
+                        >
+                            <Text style={styles.registerButtonText}>CREATE GROUP</Text>
+                        </TouchableOpacity>
+                        <Text
+                            style={styles.cancelButtonText}
+                            onPress={() => {
+                                this.setState({ isSelectImageModal: false });
+
+                            }}
+                        >
+                            Cancel</Text>
+                    </View>
+                </ScrollView>
+            </Modal>
+        )
+    }
+
     groupModal = () => {
         return (
             <Modal
@@ -429,14 +563,15 @@ export default class GroupScreen extends Component {
                         <TouchableOpacity
                             style={styles.registerButton}
                             onPress={() => {
-                                Alert.alert('GROUP ADDED ')
-                                this.addGrope(this.state.gName, this.state.gAbout)
+                                var id = this.createUniqueId()
+                                //this.addGrope(this.state.gName, this.state.gAbout)
                                 this.setState({
-                                    isGroupModal: false
+                                    isGroupModal: false,
+                                    isSelectImageModal: true,
+                                    refgCode: id
                                 })
-
+                                //Alert.alert('GROUP ADDED ')
                             }
-
                             }
                         >
                             <Text style={styles.registerButtonText}>ADD GROUP</Text>
@@ -455,6 +590,8 @@ export default class GroupScreen extends Component {
         );
     }
 
+
+
     keyExtractor = (index) => index.toString()
 
     renderItem = ({ item, i }) => {
@@ -467,9 +604,9 @@ export default class GroupScreen extends Component {
                     }}
                 >
                     <Text
-                    style={{
-                        fontSize:RFValue(20)
-                    }}
+                        style={{
+                            fontSize: RFValue(20)
+                        }}
                     >{item.group_name}</Text>
                 </TouchableOpacity>}
                 subtitle={<TouchableOpacity
@@ -512,6 +649,8 @@ export default class GroupScreen extends Component {
                         <View>
                             {this.friendModal()}
                             {this.groupModal()}
+                            {this.selectImageModal()}
+
                         </View>
                         <View>
                             {

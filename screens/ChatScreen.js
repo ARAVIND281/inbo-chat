@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import MyHeader from '../components/MyHeader.js';
-import { Icon, Input, ListItem } from 'react-native-elements';
+import { Icon, Input, ListItem, Avatar } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
 import firebase from 'firebase'
 import db from '../config';
@@ -43,10 +43,11 @@ export default class ChatScreen extends Component {
             chats: [],
             messages: [],
             item: undefined,
-            image: '',
+            image: '#',
             filePath: '',
             fileData: '',
-            fileUri: ''
+            fileUri: '',
+            iseditfriendModalVisible: false
         }
     }
 
@@ -79,7 +80,7 @@ export default class ChatScreen extends Component {
         return this.uid;
     }
 
-     handlePickImage = async () => {
+    handlePickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
@@ -139,23 +140,84 @@ export default class ChatScreen extends Component {
         }
     }
 
+    editfriendModal = () => {
+        return (
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={this.state.iseditfriendModalVisible}
+            >
+                <ScrollView style={styles.scrollview}>
+                    <View style={styles.signupView}>
+                        <Text style={styles.signupText}>Frind Details</Text>
+                    </View>
+                    <View
+                        style={{
+                            flex: 0.3,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            marginTop: 20
+                        }}
+                    >
+                        <Avatar
+                            rounded
+                            source={{
+                                uri: this.state.image,
+                            }}
+                            size={RFValue(200)}
+                            onPress={() => this.selectPicture()}
+                            showEditButton
+                        />
+                    </View>
+                    <View style={{ alignItems: 'center' }}>
+                        <TouchableOpacity
+                            style={styles.registerButton}
+                            onPress={() => {
+                                this.setState({
+                                    iseditfriendModalVisible: false
+                                })
+
+                            }}
+                        >
+                            <Text style={styles.registerButtonText}>DONE</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </Modal>
+        );
+    }
+
     render() {
         return (
             <View style={{ flex: 1, backgroundColor: '#ffefff' }}>
-
-                <SafeAreaView style={{ backgroundColor: '#f5f5f5' }}>
-                    <NavBar>
-                        <NavButton />
-                        <NavTitle>
-                            INBO CHAT{'\n'}
-                            <Text style={{ fontSize: 10, color: '#aaa' }}>
-                                hi
-          </Text>
-                        </NavTitle>
-                        <NavButton />
-                    </NavBar>
-                </SafeAreaView>
-
+                {this.editfriendModal()}
+                <View style={{ marginTop: RFValue(10) }}>
+                    <ListItem
+                        title={this.state.fName}
+                        subtitle={this.state.fContact}
+                        titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                        leftElement={
+                            <Icon
+                                name="arrow-left"
+                                type="feather"
+                                //color="#ffffff"
+                                onPress={() => this.props.navigation.goBack()}
+                            />
+                        }
+                        rightElement={
+                            <Icon
+                                name="edit"
+                                type="feather"
+                                //color="#ffffff"
+                                onPress={() => {
+                                    this.setState({
+                                        iseditfriendModalVisible: true
+                                    })
+                                }}
+                            />
+                        }
+                    />
+                </View>
                 <GiftedChat
                     messages={this.state.messages}
                     onSend={(message) => {
@@ -178,7 +240,8 @@ export default class ChatScreen extends Component {
                     isTyping={true}
                     infiniteScroll
                     renderActions={this.renderActions}
-
+                    showUserAvatar={true}
+                    showAvatarForEveryMessage={true}
                 />
             </View>
         );
@@ -194,3 +257,74 @@ export default class ChatScreen extends Component {
         this.getUserDetails();
     }
 }
+
+const styles = StyleSheet.create({
+    add1: {
+        width: RFValue(65),
+        height: RFValue(65),
+        marginTop: RFValue(20),
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: RFValue(100),
+        backgroundColor: "#a901ff",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 8,
+        },
+        shadowOpacity: 0.44,
+        shadowRadius: 10.32,
+        elevation: 16,
+        marginTop: RFValue(10),
+    },
+    scrollview: {
+        flex: 1,
+        backgroundColor: "#fff"
+    },
+    signupView: {
+        flex: 0.05,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    signupText: {
+        fontSize: RFValue(20),
+        fontWeight: "bold",
+        color: "#32867d"
+    },
+    label: {
+        fontSize: RFValue(17),
+        color: "#717D7E",
+        fontWeight: 'bold',
+        paddingLeft: RFValue(10),
+        marginLeft: RFValue(20)
+    },
+    registerButton: {
+        width: "75%",
+        height: RFValue(50),
+        marginTop: RFValue(20),
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: RFValue(3),
+        backgroundColor: "#32867d",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 8,
+        },
+        shadowOpacity: 0.44,
+        shadowRadius: 10.32,
+        elevation: 16,
+        marginTop: RFValue(10),
+    },
+    registerButtonText: {
+        fontSize: RFValue(23),
+        fontWeight: "bold",
+        color: "#fff",
+    },
+    cancelButtonText: {
+        fontSize: RFValue(20),
+        fontWeight: 'bold',
+        color: "#32867d",
+        marginTop: RFValue(10)
+    },
+})
