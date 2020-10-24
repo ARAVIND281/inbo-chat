@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import Contacts from 'react-native-contacts';
 import MyHeader from '../components/MyHeader.js';
-import { Icon, Input, ListItem, Avatar } from 'react-native-elements';
+import { Icon, Input, ListItem, Avatar, Badge } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
 import firebase from 'firebase'
 import db from '../config'
@@ -40,14 +40,16 @@ export default class ContactsScreen extends Component {
       isGroupModal: false,
       gCode: '',
       gName: '',
-      gAbout: '',
+      gAbout: 'INBO CHAT',
       jgName: '',
       jgAbout: '',
       jgCode: '',
       gdocId: '',
       image: '#',
       isSelectImageModal: false,
-      refgCode: ''
+      refgCode: '',
+      groupValue: 'fail',
+      friendValue: 'fail',
     };
   }
 
@@ -134,22 +136,29 @@ export default class ContactsScreen extends Component {
             fEmail: data.email_id,
             fabout: data.about,
             docId: doc.id,
+            friendValue: 'pass',
           });
-          this.addFriend(this.state.fEmail, this.state.fabout, friendid)
+          this.addFriend(this.state.fEmail, this.state.fabout, friendid),
           this.addFriendslist(friendid)
-          this.addChat(friendid)
         });
       });
+      if (this.state.friendValue === 'fail') {
+        alert('This number is not registered in the INBO CHAT.Ask your friend to register in the APP')
+      }
   }
 
   addFriend = async (email_id, about, id) => {
-    await db.collection(this.state.userid + 'friend').add({
-      name: this.state.fName,
-      contact: this.state.fContact,
-      email_id: email_id,
-      about: about,
-      friendid: id
-    })
+    await db.collection(this.state.userid + 'friend')
+      .doc(id)
+      .set({
+        name: this.state.fName,
+        contact: this.state.fContact,
+        email_id: email_id,
+        about: about,
+        friendid: id,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        state: 'read'
+      })
   }
 
   getUserDetails = () => {
@@ -170,32 +179,43 @@ export default class ContactsScreen extends Component {
   };
 
   addFriendslist = async (id) => {
-    await db.collection(this.state.fEmail + 'friend').add({
-      name: this.state.fContact,
-      contact: this.state.fContact,
-      email_id: this.state.userid,
-      about: this.state.about,
-      friendid: id
-    })
+    await db.collection(this.state.fEmail + 'friend')
+      .doc(id)
+      .set({
+        name: this.state.fContact,
+        contact: this.state.fContact,
+        email_id: this.state.userid,
+        about: this.state.about,
+        friendid: id,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        state: 'read',
+      })
     Alert.alert('Friend Added Successfully')
+  }
+
+  IconWithBadge = () => {
+    return (
+      <View>
+        <Icon name="comments" type="font-awesome-5" solid={true} size={RFValue(35)}
+          onPress={() => {
+            this.props.navigation.navigate("RecieverDetails", { "details": item })
+          }}
+        />
+        <Badge
+          status="success" containerStyle={{ position: 'absolute', top: -4, right: -4 }} />
+      </View>
+    )
   }
 
   getFriends = () => {
     this.friendsRef = db.collection(this.state.userid + "friend")
+      .orderBy('createdAt', 'desc')
       .onSnapshot((snapshot) => {
         var friends = snapshot.docs.map((doc) => doc.data())
         this.setState({
           friends: friends
         });
       })
-  }
-
-  addChat = async (id) => {
-    await db.collection(id).add({
-      massage: 'Thank you for using INBO CHAT',
-      sender: 'INBO CHAT',
-      reciever: 'INBO CHAT USER',
-    })
   }
 
   keyExtractor = (index) => index.toString()
@@ -207,7 +227,7 @@ export default class ContactsScreen extends Component {
         title={
           <TouchableOpacity
             onPress={() => {
-              this.props.navigation.navigate("GroupChat", { "details": item })
+              this.props.navigation.navigate("RecieverDetails", { "details": item })
             }}
           >
             <Text
@@ -216,13 +236,6 @@ export default class ContactsScreen extends Component {
               }}
             >{item.name}</Text>
           </TouchableOpacity>}
-        subtitle={<TouchableOpacity
-          onPress={() => {
-            this.props.navigation.navigate("GroupChat", { "details": item })
-          }}
-        >
-          <Text>{item.group_about}</Text>
-        </TouchableOpacity>}
         subtitle={
           <TouchableOpacity
             onPress={() => {
@@ -234,20 +247,26 @@ export default class ContactsScreen extends Component {
         }
         //titleStyle={{ color: 'black', fontWeight: 'bold' }}
         rightElement={
-          <TouchableOpacity style={styles.button}
+          <TouchableOpacity
             onPress={() => {
               this.props.navigation.navigate("RecieverDetails", { "details": item })
             }}
           >
-            <Icon name="comments" type="font-awesome-5" solid={true} size={RFValue(35)} />
-          </TouchableOpacity>
-        }
-        leftElement={
-          <TouchableOpacity style={styles.button}
-            onPress={() => {
-            }}
-          >
-            <Icon name="ellipsis-v" type="font-awesome-5" />
+            {item.state === 'unread' ? (
+              <View>
+                <Icon name="comments" type="font-awesome-5" solid={true} size={RFValue(35)} />
+                <Badge
+                  status="success"
+                  containerStyle={{ position: 'absolute', top: -4, right: -4 }}
+                  value />
+              </View>
+            ) : (
+                <Icon name="comments" type="font-awesome-5" solid={true} size={RFValue(35)} />
+
+              )
+
+            }
+
           </TouchableOpacity>
         }
         bottomDivider
@@ -294,22 +313,42 @@ export default class ContactsScreen extends Component {
     })
   }
 
-  joinGroup = async (jgCode) => {
-    await db.collection('groups')
-      .where("grope_code", "==", jgCode)
+  joinGroup = (jgCode) => {
+    db.collection(this.state.userid + 'group')
+      .where("group_code", "==", jgCode)
       .get()
       .then((snapshot) => {
         snapshot.forEach((doc) => {
           var data = doc.data();
           this.setState({
-            jgName: data.name,
-            jgAbout: data.about,
-            gdocId: doc.id,
+            RefCode: data.group_code,
+            RefName: data.group_name
           });
-          this.addinUserGroup(this.state.jgName, this.state.jgAbout)
-          this.addinGroupMember(this.state.jgName)
-          Alert.alert('joined Group Successfully')
         });
+
+        if (jgCode === this.state.RefCode) {
+          Alert.alert('Your already in ' + this.state.RefName + ' group')
+        } else if (jgCode !== this.state.RefCode) {
+          db.collection('groups')
+            .where("grope_code", "==", jgCode)
+            .get()
+            .then((snapshot) => {
+              snapshot.forEach((doc) => {
+                var data = doc.data();
+                this.setState({
+                  jgName: data.name,
+                  jgAbout: data.about,
+                  groupValue: 'pass',
+                  gdocId: doc.id,
+                });
+                this.addinUserGroup(this.state.jgName, this.state.jgAbout, jgCode),
+                  this.addinGroupMember(jgCode),
+                  Alert.alert('joined Group Successfull')
+              });
+            });
+        } else if (this.state.groupValue !== 'pass') {
+          Alert.alert('Invalid Grope Code')
+        }
       });
   }
 
@@ -440,7 +479,7 @@ export default class ContactsScreen extends Component {
                 }}
                 leftIcon={
                   <Icon
-                    name='code-commit'
+                    name='key'
                     size={RFValue(35)}
                     color='#fabf10'
                     type="font-awesome-5"
@@ -539,13 +578,17 @@ export default class ContactsScreen extends Component {
               style={styles.registerButton}
               onPress={() => {
                 var id = this.createUniqueId()
-                //this.addGrope(this.state.gName, this.state.gAbout)
-                this.setState({
-                  isGroupModal: false,
-                  isSelectImageModal: true,
-                  refgCode: id
-                })
-                //Alert.alert('GROUP ADDED ')
+                {
+                  this.state.gName.length !== 0 ? (
+                    this.setState({
+                      isGroupModal: false,
+                      isSelectImageModal: true,
+                      refgCode: id
+                    })
+                  ) : (
+                      Alert.alert('Please type your group Name')
+                    )
+                }
               }
               }
             >

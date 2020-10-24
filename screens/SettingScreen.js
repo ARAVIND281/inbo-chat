@@ -36,7 +36,27 @@ export default class SettingScreen extends Component {
             image: '#',
             name: "",
             docId: "",
+            Refcontact:'',
         };
+    }
+
+    checkNumber = () => {
+        db.collection("users")
+            .where("contact", "==", this.state.contact)
+            .get()
+            .then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    var data = doc.data();
+                    this.setState({
+                        Refcontact: data.contact,
+                    });
+                });
+            });
+        if (this.state.contact !== this.state.Refcontact) {
+            this.updateUserDetails();
+        } else if (this.state.contact === this.state.Refcontact) {
+            Alert.alert('This contact is already registered Please Logout and Login')
+        }
     }
 
     selectPicture = async () => {
@@ -251,7 +271,7 @@ export default class SettingScreen extends Component {
                             <TouchableOpacity
                                 style={styles.button}
                                 onPress={() => {
-                                    this.updateUserDetails();
+                                    this.checkNumber();
                                     this.setState({ isModalVisible: false });
                                 }}
                             >
@@ -443,7 +463,7 @@ export default class SettingScreen extends Component {
                                     this.state.contact.length !== 10 ? (
                                         Alert.alert('Enter a Valid Phone Number')
                                     ) : (
-                                            this.updateUserDetails(),
+                                            this.checkNumber(),
                                             this.setState({ iscontactModalVisible: false })
                                         )
                                 }}

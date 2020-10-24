@@ -44,6 +44,7 @@ export default class ChatScreen extends Component {
             messages: [],
             item: undefined,
             image: '#',
+            image2: '#',
             filePath: '',
             fileData: '',
             fileUri: '',
@@ -70,6 +71,38 @@ export default class ChatScreen extends Component {
                         text: '',
                     });
                 });
+            });
+    };
+
+    fetchImage = (imageName) => {
+        var storageRef = firebase
+            .storage()
+            .ref()
+            .child("user_profiles/" + imageName);
+
+        storageRef
+            .getDownloadURL()
+            .then((url) => {
+                this.setState({ image: url });
+            })
+            .catch((error) => {
+                this.setState({ image: "https://firebasestorage.googleapis.com/v0/b/inbo-chat-a81c7.appspot.com/o/user_profiles%2F0c3b3adb1a7530892e55ef36d3be6cb8.png?alt=media&token=7818f4b2-e6cf-4342-8666-424c4636a430" });
+            });
+    };
+
+    fetchImage2 = (imageName) => {
+        var storageRef = firebase
+            .storage()
+            .ref()
+            .child("user_profiles/" + imageName);
+
+        storageRef
+            .getDownloadURL()
+            .then((url) => {
+                this.setState({ image2: url });
+            })
+            .catch((error) => {
+                this.setState({ image2: "https://firebasestorage.googleapis.com/v0/b/inbo-chat-a81c7.appspot.com/o/user_profiles%2F0c3b3adb1a7530892e55ef36d3be6cb8.png?alt=media&token=7818f4b2-e6cf-4342-8666-424c4636a430" });
             });
     };
 
@@ -100,17 +133,46 @@ export default class ChatScreen extends Component {
         return (
             <Actions
                 options={{
-                    ['Send Image']: this.handlePickImage,
-                }}
+                    ['Send Image']: async (cancelled, uri) => {
+                        let result = await ImagePicker.launchImageLibraryAsync({
+                            mediaTypes: ImagePicker.MediaTypeOptions.All,
+                            allowsEditing: true,
+                            aspect: [4, 3],
+                            quality: 1,
+                        });
+
+                        console.log(result);
+
+                        if (!cancelled) {
+                            this.loadImage(uri);
+                        }
+
+                        // alert('Dear INBO user Sorry for inconvenience INBO Team working on sending image and video soon you can send image and video')  
+                    }
+                }
+                }
                 icon={() => (
                     <Icon name={'attachment'} size={28} color={'red'} />
                 )}
-                onSend={args => console.log(args)}
+
             />
         )
     }
 
+    loadImage = async (uri) => {
+        var imageName = Math.random().toString(72).substring(14);
+        var response = await fetch(uri);
+        var blob = await response.blob();
 
+        var ref = firebase
+            .storage()
+            .ref()
+            .child("user_profiles/" + imageName);
+
+        return ref.put(blob).then((response) => {
+            Alert.alert('send')
+        });
+    }
 
     loadMessages = (where, callback) => {
         this.messagesRef = firebase.database().ref(where);
@@ -124,11 +186,32 @@ export default class ChatScreen extends Component {
                 user: {
                     _id: message.user._id,
                     name: message.user.name,
+                    avatar: message.user.avatar
                 },
             });
         };
         this.messagesRef.limitToLast(20).on('child_added', onReceive);
     };
+
+    groupImageWithIcon = () => {
+        <View>
+            <Icon
+                name="arrow-left"
+                type="feather"
+                //color="#ffffff"
+                onPress={() => this.props.navigation.goBack()}
+            />
+            <View>
+                <Avatar
+                    rounded
+                    source={{
+                        uri: this.state.image,
+                    }}
+                    size={RFValue(20)}
+                />
+            </View>
+        </View>
+    }
 
     sendMessage(message) {
         for (let i = 0; i < message.length; i++) {
@@ -138,7 +221,36 @@ export default class ChatScreen extends Component {
                 createdAt: firebase.database.ServerValue.TIMESTAMP,
             });
         }
+        this.updateUserState();
+        this.updateUserfState();
     }
+
+    updateUserState = () => {
+        db.collection(this.state.userid + 'friend')
+            .doc(this.state.fid)
+            .update({
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+    };
+
+    updateUserfState = () => {
+        db.collection(this.state.fEmail + 'friend')
+            .doc(this.state.fid)
+            .update({
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                state: 'unread'
+            });
+    };
+
+    updateState = () => {
+        db.collection(this.state.userid + 'friend')
+            .doc(this.state.fid)
+            .update({
+                state: 'read'
+            });
+    }
+
+
 
     editfriendModal = () => {
         return (
@@ -147,9 +259,9 @@ export default class ChatScreen extends Component {
                 transparent={true}
                 visible={this.state.iseditfriendModalVisible}
             >
-                <ScrollView style={styles.scrollview}>
+                <ScrollView style={[styles.scrollview, { backgroundColor: '#FFFEE0' }]}>
                     <View style={styles.signupView}>
-                        <Text style={styles.signupText}>Frind Details</Text>
+                        <Text style={styles.signupText}>Friend Details</Text>
                     </View>
                     <View
                         style={{
@@ -165,10 +277,62 @@ export default class ChatScreen extends Component {
                                 uri: this.state.image,
                             }}
                             size={RFValue(200)}
-                            onPress={() => this.selectPicture()}
-                            showEditButton
                         />
                     </View>
+                    <Text
+                        style={{
+                            fontWeight: "300",
+                            fontSize: RFValue(20),
+                            padding: RFValue(10),
+                            textAlign: 'center'
+                        }}
+                    >
+                        {this.state.fName}
+                    </Text>
+                    <Text
+                        style={{
+                            fontWeight: "300",
+                            fontSize: RFValue(15),
+                            padding: RFValue(10),
+                            textAlign: 'left'
+                        }}
+                    >
+                        About and Phone number
+                    </Text>
+                    <View style={{ marginTop: RFValue(-10) }}>
+                        <ListItem
+                            title={this.state.fabout}
+                            subtitle='About'
+                            titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                        />
+                    </View>
+                    <View style={{ marginTop: RFValue(-20) }}>
+                        <ListItem
+                            title={this.state.fContact}
+                            subtitle='Contact Number'
+                            titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                        />
+                    </View>
+                    <Text
+                        style={{
+                            fontWeight: '300',
+                            fontSize: RFValue(20),
+                            padding: RFValue(10),
+                            textAlign: 'left'
+                        }}
+                    >
+                        Encryption
+                    </Text>
+                    <Text
+                        style={{
+                            fontWeight: '300',
+                            fontSize: RFValue(15),
+                            padding: RFValue(18),
+                            textAlign: 'left'
+                        }}
+                    >
+                        Messages are end-to-end encrypted.No one else other than you and your friend can't see this messages
+                    </Text>
                     <View style={{ alignItems: 'center' }}>
                         <TouchableOpacity
                             style={styles.registerButton}
@@ -197,18 +361,33 @@ export default class ChatScreen extends Component {
                         subtitle={this.state.fContact}
                         titleStyle={{ color: 'black', fontWeight: 'bold' }}
                         leftElement={
-                            <Icon
-                                name="arrow-left"
-                                type="feather"
-                                //color="#ffffff"
-                                onPress={() => this.props.navigation.goBack()}
-                            />
+                            <View>                                
+                                <View style={{marginLeft:RFValue(25),marginTop:RFValue(10)}}>
+                                    <Avatar
+                                        rounded
+                                        source={{
+                                            uri: this.state.image,
+                                        }}
+                                        size={RFValue(50)}
+                                        onPress={() => this.props.navigation.goBack()}
+                                    />
+                                </View>
+                                <View style={{marginLeft:RFValue(-60),marginTop:RFValue(10)}}>
+                                <Icon
+                                    name="arrow-left"
+                                    type="font-awesome-5"
+                                    //color="#ffffff"
+                                    onPress={() => this.props.navigation.goBack()}
+                                    containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
+                                />
+                                </View>
+                            </View>
                         }
                         rightElement={
                             <Icon
-                                name="edit"
-                                type="feather"
-                                //color="#ffffff"
+                                name="info-circle"
+                                type="font-awesome-5"
+                                size={RFValue(40)}
                                 onPress={() => {
                                     this.setState({
                                         iseditfriendModalVisible: true
@@ -226,7 +405,7 @@ export default class ChatScreen extends Component {
                     user={{
                         _id: this.state.userid,
                         name: this.state.firstName + '' + this.state.lastName,
-                        avatar: this.state.image
+                        avatar: this.state.image2
                     }}
                     scrollToBottom
                     alwaysShowSend={true}
@@ -240,7 +419,6 @@ export default class ChatScreen extends Component {
                     isTyping={true}
                     infiniteScroll
                     renderActions={this.renderActions}
-                    showUserAvatar={true}
                     showAvatarForEveryMessage={true}
                 />
             </View>
@@ -255,6 +433,9 @@ export default class ChatScreen extends Component {
             });
         });
         this.getUserDetails();
+        this.updateState();
+        this.fetchImage(this.state.fEmail);
+        this.fetchImage2(this.state.userid);
     }
 }
 

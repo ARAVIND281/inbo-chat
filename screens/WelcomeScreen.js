@@ -30,7 +30,31 @@ export default class WelcomeScreen extends Component {
             contact: "",
             confirmPassword: "",
             isModalVisible: "false",
+            Refcontact: ''
         };
+    }
+
+    checkNumber = () => {
+        db.collection("users")
+            .where("contact", "==", this.state.contact)
+            .get()
+            .then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    var data = doc.data();
+                    this.setState({
+                        Refcontact: data.contact,
+                    });
+                });
+            });
+        if (this.state.contact !== this.state.Refcontact) {
+            this.userSignUp(
+                this.state.emailId,
+                this.state.password,
+                this.state.confirmPassword
+            )
+        } else if (this.state.contact === this.state.Refcontact) {
+            Alert.alert('This contact is already registered Please Login')
+        }
     }
 
     userSignUp = (emailId, password, confirmPassword) => {
@@ -47,7 +71,7 @@ export default class WelcomeScreen extends Component {
                         contact: this.state.contact,
                         email_id: this.state.emailId,
                         about: this.state.about,
-                        imageurl: 'https://firebasestorage.googleapis.com/v0/b/inbo-chat-a81c7.appspot.com/o/user_profiles%2Fchat%20logo-2.png?alt=media&token=b75e4704-5f31-4893-aaeb-4f4e5720d3ea',
+                        imageurl: 'https://firebasestorage.googleapis.com/v0/b/inbo-chat-a81c7.appspot.com/o/user_profiles%2F0c3b3adb1a7530892e55ef36d3be6cb8.png?alt=media&token=7818f4b2-e6cf-4342-8666-424c4636a430',
                     });
                     return Alert.alert("User Added Successfully", "", [
                         {
@@ -204,9 +228,10 @@ export default class WelcomeScreen extends Component {
                             keyboardType={"email-address"}
                             onChangeText={(text) => {
                                 this.setState({
-                                    emailId: text,
+                                    emailId: text.toLowerCase().trim(),
                                 });
                             }}
+                            value={this.state.emailId}
                             leftIcon={
                                 <Icon
                                     name='envelope-open-text'
@@ -265,11 +290,13 @@ export default class WelcomeScreen extends Component {
                                 this.state.contact.length !== 10 ? (
                                     Alert.alert('Enter a Valid Phone Number')
                                 ) : (
-                                        this.userSignUp(
+                                        /*this.userSignUp(
                                             this.state.emailId,
                                             this.state.password,
                                             this.state.confirmPassword
-                                        ))
+                                        )*/
+                                        this.checkNumber()
+                                    )
                             }
 
                             }
@@ -292,78 +319,80 @@ export default class WelcomeScreen extends Component {
         return (
             <View style={styles.container}>
                 {this.showModal()}
-                <View
-                    style={{ flex: 0.25 }}
-                >
-                    <View style={{ flex: 0.15 }} />
-                    <View style={styles.logo}>
-                        <Image
-                            source={require('../assets/logo.png')}
-                            style={styles.santaImage}
-                        />
+                <ScrollView>
+                    <View
+                        style={{ flex: 0.25 }}
+                    >
+                        <View style={{ flex: 0.15 }} />
+                        <View style={styles.logo}>
+                            <Image
+                                source={require('../assets/logo.png')}
+                                style={styles.santaImage}
+                            />
+                        </View>
                     </View>
-                </View>
-                <View style={{ flex: 0.45, marginTop: 150 }}>
+                    <View style={{ flex: 0.45, marginTop: 20 }}>
 
-                    <View style={styles.TextInput}>
-                        <Input
-                            style={styles.loginBox}
-                            placeholder="abc@example.com"
-                            placeholderTextColor="#fabf10"
-                            leftIcon={
-                                <Icon
-                                    name='envelope-open-text'
-                                    size={RFValue(35)}
-                                    color='black'
-                                    type="font-awesome-5"
-                                />
-                            }
-                            keyboardType="email-address"
-                            onChangeText={(text) => {
-                                this.setState({
-                                    emailId: text,
-                                });
-                            }}
+                        <View style={styles.TextInput}>
+                            <Input
+                                style={styles.loginBox}
+                                placeholder="abc@example.com"
+                                placeholderTextColor="#fabf10"
+                                leftIcon={
+                                    <Icon
+                                        name='envelope-open-text'
+                                        size={RFValue(35)}
+                                        color='black'
+                                        type="font-awesome-5"
+                                    />
+                                }
+                                keyboardType="email-address"
+                                onChangeText={(text) => {
+                                    this.setState({
+                                        emailId: text,
+                                    });
+                                }}
 
-                        />
-                        <Input
-                            style={[styles.loginBox, { marginTop: RFValue(15) }]}
-                            secureTextEntry={true}
-                            placeholder="Enter Password"
-                            placeholderTextColor="#fabf10"
-                            leftIcon={
-                                <Icon
-                                    name='user-lock'
-                                    size={RFValue(30)}
-                                    color='black'
-                                    type="font-awesome-5"
-                                />
-                            }
-                            onChangeText={(text) => {
-                                this.setState({
-                                    password: text,
-                                });
-                            }}
-                        />
+                            />
+                            <Input
+                                style={[styles.loginBox, { marginTop: RFValue(15) }]}
+                                secureTextEntry={true}
+                                placeholder="Enter Password"
+                                placeholderTextColor="#fabf10"
+                                leftIcon={
+                                    <Icon
+                                        name='user-lock'
+                                        size={RFValue(30)}
+                                        color='black'
+                                        type="font-awesome-5"
+                                    />
+                                }
+                                onChangeText={(text) => {
+                                    this.setState({
+                                        password: text,
+                                    });
+                                }}
+                            />
+                        </View>
+                        <View style={{ flex: 0.5, alignItems: "center", marginTop: 20 }}>
+                            <TouchableOpacity
+                                style={styles.button}
+                                onPress={() => {
+                                    this.userLogin(this.state.emailId, this.state.password);
+                                }}
+                            >
+                                <Text style={styles.buttonText}>Login</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.button}
+                                onPress={() => this.setState({ isModalVisible: true })}
+                            >
+                                <Text style={styles.buttonText}>SignUp</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <View style={{ flex: 0.5, alignItems: "center", marginTop: 50 }}>
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => {
-                                this.userLogin(this.state.emailId, this.state.password);
-                            }}
-                        >
-                            <Text style={styles.buttonText}>Login</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPress={() => this.setState({ isModalVisible: true })}
-                        >
-                            <Text style={styles.buttonText}>SignUp</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                </ScrollView>
             </View>
         );
     }

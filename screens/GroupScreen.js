@@ -41,7 +41,7 @@ export default class GroupScreen extends Component {
             isGroupModal: false,
             gCode: '',
             gName: '',
-            gAbout: '',
+            gAbout: 'INBO CHAT',
             jgName: '',
             jgAbout: '',
             jgCode: '',
@@ -49,7 +49,11 @@ export default class GroupScreen extends Component {
             groups: [],
             image: '#',
             isSelectImageModal: false,
-            refgCode: ''
+            refgCode: '',
+            RefCode: '#',
+            RefName: '',
+            groupValue: 'fail',
+            friendValue: 'fail',
         };
     }
 
@@ -111,7 +115,7 @@ export default class GroupScreen extends Component {
             this.addGropeMember(id),
             this.addUserGroup(gName, gAbout, id),
             this.addinGroup(gName, gAbout, id),
-        Alert.alert('GROUP ADDED ')
+            Alert.alert('GROUP ADDED ')
     }
 
     addinGroup = async (gName, gAbout, id) => {
@@ -129,7 +133,7 @@ export default class GroupScreen extends Component {
             contact: this.state.contact,
             about: this.state.about,
             userid: this.state.userid,
-            grope_code:gName
+            grope_code: gName
         })
     }
 
@@ -141,26 +145,46 @@ export default class GroupScreen extends Component {
         })
     }
 
-    joinGroup = async (jgCode) => {
-        await db.collection('groups')
-            .where("grope_code", "==", jgCode)
+    joinGroup = (jgCode) => {
+        db.collection(this.state.userid + 'group')
+            .where("group_code", "==", jgCode)
             .get()
             .then((snapshot) => {
                 snapshot.forEach((doc) => {
                     var data = doc.data();
                     this.setState({
-                        jgName: data.name,
-                        jgAbout: data.about,
-                        gdocId: doc.id,
+                        RefCode: data.group_code,
+                        RefName: data.group_name
                     });
-                    this.addinUserGroup(this.state.jgName, this.state.jgAbout,jgCode)
-                    this.addinGroupMember(jgCode)
-                    Alert.alert('joined Group Successfully')
                 });
+
+                if (jgCode === this.state.RefCode) {
+                    Alert.alert('Your already in ' + this.state.RefName + ' group')
+                } else if (jgCode !== this.state.RefCode) {
+                    db.collection('groups')
+                        .where("grope_code", "==", jgCode)
+                        .get()
+                        .then((snapshot) => {
+                            snapshot.forEach((doc) => {
+                                var data = doc.data();
+                                this.setState({
+                                    jgName: data.name,
+                                    jgAbout: data.about,
+                                    groupValue: 'pass',
+                                    gdocId: doc.id,
+                                });
+                                this.addinUserGroup(this.state.jgName, this.state.jgAbout, jgCode),
+                                    this.addinGroupMember(jgCode),
+                                    Alert.alert('joined Group Successfull')
+                            });
+                        });
+                } else if (this.state.groupValue !== 'pass') {
+                    Alert.alert('Invalid Grope Code')
+                }
             });
     }
 
-    addinUserGroup = async (jgName, jgAbout,id) => {
+    addinUserGroup = async (jgName, jgAbout, id) => {
         await db.collection(this.state.userid + "group").add({
             group_name: jgName,
             group_about: jgAbout,
@@ -178,22 +202,27 @@ export default class GroupScreen extends Component {
     }
 
     getFriendDetails = async (fContact) => {
+        var friendid = this.createUniqueId()
         await db.collection("users")
-            .where("contact", "==", fContact)
-            .get()
-            .then((snapshot) => {
-                snapshot.forEach((doc) => {
-                    var data = doc.data();
-                    this.setState({
-                        fEmail: data.email_id,
-                        fabout: data.about,
-                        docId: doc.id,
-                    });
-                    this.addFriend(this.state.fEmail, this.state.fabout)
-                    this.addFriendslist()
-                });
+          .where("contact", "==", fContact)
+          .get()
+          .then((snapshot) => {
+            snapshot.forEach((doc) => {
+              var data = doc.data();
+              this.setState({
+                fEmail: data.email_id,
+                fabout: data.about,
+                docId: doc.id,
+                friendValue: 'pass',
+              });
+              this.addFriend(this.state.fEmail, this.state.fabout, friendid),
+              this.addFriendslist(friendid)
             });
-    }
+          });
+          if (this.state.friendValue === 'fail') {
+            alert('This number is not registered in the INBO CHAT.Ask your friend to register in the APP')
+          }
+      }
 
     addFriend = async (email_id, about) => {
         await db.collection(this.state.userid + 'friend').add({
@@ -465,7 +494,7 @@ export default class GroupScreen extends Component {
                                 }}
                                 leftIcon={
                                     <Icon
-                                        name='code-commit'
+                                        name='key'
                                         size={RFValue(35)}
                                         color='#fabf10'
                                         type="font-awesome-5"
@@ -484,7 +513,7 @@ export default class GroupScreen extends Component {
                                     }}
                                     leftIcon={
                                         <Icon
-                                            name='code-commit'
+                                            name='key'
                                             size={RFValue(35)}
                                             color='#fabf10'
                                             type="font-awesome-5"
@@ -564,13 +593,17 @@ export default class GroupScreen extends Component {
                             style={styles.registerButton}
                             onPress={() => {
                                 var id = this.createUniqueId()
-                                //this.addGrope(this.state.gName, this.state.gAbout)
-                                this.setState({
-                                    isGroupModal: false,
-                                    isSelectImageModal: true,
-                                    refgCode: id
-                                })
-                                //Alert.alert('GROUP ADDED ')
+                                {
+                                    this.state.gName.length !== 0 ? (
+                                        this.setState({
+                                            isGroupModal: false,
+                                            isSelectImageModal: true,
+                                            refgCode: id
+                                        })
+                                    ) : (
+                                            Alert.alert('Please type your group Name')
+                                        )
+                                }
                             }
                             }
                         >
@@ -623,14 +656,6 @@ export default class GroupScreen extends Component {
                         }}
                     >
                         <Icon name="comments" type="font-awesome-5" solid={true} size={RFValue(35)} />
-                    </TouchableOpacity>
-                }
-                leftElement={
-                    <TouchableOpacity style={styles.button}
-                        onPress={() => {
-                        }}
-                    >
-                        <Icon name="ellipsis-v" type="font-awesome-5" />
                     </TouchableOpacity>
                 }
                 bottomDivider

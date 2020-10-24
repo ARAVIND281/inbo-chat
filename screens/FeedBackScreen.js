@@ -17,11 +17,13 @@ export default class FeedBackScreen extends Component {
     constructor() {
         super();
         this.state = {
-            userId: "firebase.auth().currentUser.email",
+            userId: firebase.auth().currentUser.email,
             subject: "",
             description: "",
             IsBookRequestActive: "",
             docId: "",
+            name:"",
+            contact:""
         };
     }
 
@@ -35,14 +37,32 @@ export default class FeedBackScreen extends Component {
 
         db.collection("FeedBack").add({
             user_id: userId,
-            book_name: subject,
-            reason_to_request: description,
-            request_id: randomRequestId,
+            subject: subject,
+            description: description,
+            FeedBack_id: randomRequestId,
+            name:this.state.name,
+            contact:this.state.contact,
             date: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
         return Alert.alert("FeedBack Send Successfully Your FeedBack ID is" + randomRequestId);
     };
+
+    getUserDetails = () => {
+        db.collection("users")
+          .where("email_id", "==", this.state.userId)
+          .get()
+          .then((snapshot) => {
+            snapshot.forEach((doc) => {
+              var data = doc.data();
+              this.setState({
+                name: data.first_name,
+                contact: data.contact,
+                docId: doc.id,
+              });
+            });
+          });
+      };
 
     render() {
 
@@ -65,7 +85,7 @@ export default class FeedBackScreen extends Component {
 
                     <View style={{ alignItems: "center" }}>
                         <Input
-                            style={styles.formTextInput}
+                            style={[styles.formTextInput ,{height:RFValue(200)}]}
                             containerStyle={{ marginTop: RFValue(30) }}
                             multiline
                             numberOfLines={8}
@@ -81,7 +101,7 @@ export default class FeedBackScreen extends Component {
                         <TouchableOpacity
                             style={[styles.button, { marginTop: RFValue(30) }]}
                             onPress={() => {
-                                this.addRequest(
+                                this.addFeedBack(
                                     this.state.subject,
                                     this.state.description
                                 );
@@ -104,7 +124,7 @@ const styles = StyleSheet.create({
     },
     formTextInput: {
         width: "75%",
-        height: RFValue(35),
+        height: RFValue(45),
         borderWidth: 1,
         padding: 10,
     },
