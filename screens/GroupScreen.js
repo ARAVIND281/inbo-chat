@@ -204,25 +204,25 @@ export default class GroupScreen extends Component {
     getFriendDetails = async (fContact) => {
         var friendid = this.createUniqueId()
         await db.collection("users")
-          .where("contact", "==", fContact)
-          .get()
-          .then((snapshot) => {
-            snapshot.forEach((doc) => {
-              var data = doc.data();
-              this.setState({
-                fEmail: data.email_id,
-                fabout: data.about,
-                docId: doc.id,
-                friendValue: 'pass',
-              });
-              this.addFriend(this.state.fEmail, this.state.fabout, friendid),
-              this.addFriendslist(friendid)
+            .where("contact", "==", fContact)
+            .get()
+            .then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    var data = doc.data();
+                    this.setState({
+                        fEmail: data.email_id,
+                        fabout: data.about,
+                        docId: doc.id,
+                        friendValue: 'pass',
+                    });
+                    this.addFriend(this.state.fEmail, this.state.fabout, friendid),
+                        this.addFriendslist(friendid)
+                });
             });
-          });
-          if (this.state.friendValue === 'fail') {
+        if (this.state.friendValue === 'fail') {
             alert('This number is not registered in the INBO CHAT.Ask your friend to register in the APP')
-          }
-      }
+        }
+    }
 
     addFriend = async (email_id, about) => {
         await db.collection(this.state.userid + 'friend').add({
@@ -691,36 +691,38 @@ export default class GroupScreen extends Component {
                             }
                         </View>
                     </View>
-                    <View style={{ marginTop: RFValue(30), justifyContent: 'flex-end' }}>
-                        <TouchableOpacity style={styles.add1}
-                            onPress={() => {
-                                this.setState({
-                                    isFriendModalVisible: true
-                                })
-                            }}>
-                            <Icon
-                                name='user-plus'
-                                type="font-awesome-5"
-                                size={RFValue(35)}
-                                color='#fabf10'
-                            />
-                        </TouchableOpacity>
-                    </View>
-                    <View style={{ justifyContent: 'flex-end' }}>
-                        <TouchableOpacity style={styles.add1}
-                            onPress={() => {
-                                this.setState({
-                                    isGroupModal: true
-                                })
-                            }}
-                        >
-                            <Icon
-                                name='users'
-                                type="font-awesome-5"
-                                size={RFValue(35)}
-                                color='#fabf10'
-                            />
-                        </TouchableOpacity>
+                    <View>
+                        <View style={{ marginTop: RFValue(-150) }}>
+                            <TouchableOpacity style={styles.add1}
+                                onPress={() => {
+                                    this.setState({
+                                        isFriendModalVisible: true
+                                    })
+                                }}>
+                                <Icon
+                                    name='user-plus'
+                                    type="font-awesome-5"
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ marginTop: RFValue(5) }}>
+                            <TouchableOpacity style={styles.add1}
+                                onPress={() => {
+                                    this.setState({
+                                        isGroupModal: true
+                                    })
+                                }}
+                            >
+                                <Icon
+                                    name='users'
+                                    type="font-awesome-5"
+                                    size={RFValue(35)}
+                                    color='#fabf10'
+                                />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </View>

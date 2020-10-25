@@ -709,11 +709,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginLeft: RFValue(50)
     },
-    formTextInput: {
-        height: RFValue(50),
-        padding: RFValue(10),
-        marginLeft: RFValue(10)
-    },
     button: {
         width: "75%",
         height: RFValue(60),
@@ -746,40 +741,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#fff",
     },
-    formInput: {
-        width: "90%",
-        height: RFValue(45),
-        padding: RFValue(10),
-        borderWidth: 1,
-        borderRadius: 2,
-        borderColor: "grey",
-        paddingBottom: RFValue(10),
-        marginLeft: RFValue(20),
-        marginBottom: RFValue(14)
-    },
-    registerButton: {
-        width: "75%",
-        height: RFValue(50),
-        marginTop: RFValue(20),
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: RFValue(3),
-        backgroundColor: "#32867d",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 8,
-        },
-        shadowOpacity: 0.44,
-        shadowRadius: 10.32,
-        elevation: 16,
-        marginTop: RFValue(10),
-    },
-    registerButtonText: {
-        fontSize: RFValue(23),
-        fontWeight: "bold",
-        color: "#fff",
-    },
     cancelButtonText: {
         fontSize: RFValue(20),
         fontWeight: 'bold',
@@ -795,35 +756,11 @@ const styles = StyleSheet.create({
         flex: 0.5,
         height: 150
     },
-    signupView: {
-        flex: 0.05,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    signupText: {
-        fontSize: RFValue(20),
-        fontWeight: "bold",
-        color: "#32867d"
-    },
     logo: {
         justifyContent: "center",
         alignItems: "center",
         padding: RFValue(10),
         height: RFValue(280)
-    },
-    santaImage: {
-        width: "70%",
-        height: "100%",
-        resizeMode: "stretch"
-    },
-    TextInput: {
-        flex: 0.5,
-        alignItems: "center",
-        justifyContent: "center"
-    },
-    bookImage: {
-        width: "100%",
-        height: RFValue(220)
     },
     loginBox: {
         width: "80%",

@@ -11,10 +11,8 @@ import {
     Alert,
     ScrollView,
 } from "react-native";
-
 import db from "../config";
 import firebase from "firebase";
-
 import { Icon, Input } from "react-native-elements";
 import { RFValue } from "react-native-responsive-fontsize";
 
@@ -440,17 +438,6 @@ const styles = StyleSheet.create({
         paddingLeft: RFValue(10),
         marginLeft: RFValue(20)
     },
-    formInput: {
-        width: "90%",
-        height: RFValue(45),
-        padding: RFValue(10),
-        borderWidth: 1,
-        borderRadius: 2,
-        borderColor: "grey",
-        paddingBottom: RFValue(10),
-        marginLeft: RFValue(20),
-        marginBottom: RFValue(14)
-    },
     registerButton: {
         width: "75%",
         height: RFValue(50),
@@ -509,9 +496,5 @@ const styles = StyleSheet.create({
         flex: 0.5,
         alignItems: "center",
         justifyContent: "center"
-    },
-    bookImage: {
-        width: "100%",
-        height: RFValue(220)
     }
 });

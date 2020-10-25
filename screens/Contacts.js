@@ -273,7 +273,6 @@ export default class ContactsScreen extends Component {
       />
     )
   }
-
   addGrope = async (gName, gAbout, id) => {
     await db.collection(id + 'groupabout').add({
       name: gName,
@@ -757,43 +756,43 @@ export default class ContactsScreen extends Component {
                 </View>
 
               </View>
-              <View style={{ marginTop: RFValue(30), justifyContent: 'flex-end' }}>
-                <TouchableOpacity style={styles.add1}
-                  onPress={() => {
-                    this.setState({
-                      isFriendModalVisible: true
-                    })
-                  }}>
-                  <Icon
-                    name='user-plus'
-                    type="font-awesome-5"
-                    size={RFValue(35)}
-                    color='#fabf10'
-                  />
-                </TouchableOpacity>
-              </View>
-              <View style={{ justifyContent: 'flex-end' }}>
-                <TouchableOpacity style={styles.add1}
-                  onPress={() => {
-                    this.setState({
-                      isGroupModal: true
-                    })
-                  }}
-                >
-                  <Icon
-                    name='users'
-                    type="font-awesome-5"
-                    size={RFValue(35)}
-                    color='#fabf10'
-                  />
-                </TouchableOpacity>
+              <View>
+                <View style={{ marginTop:RFValue(-150) }}>
+                  <TouchableOpacity style={styles.add1}
+                    onPress={() => {
+                      this.setState({
+                        isFriendModalVisible: true
+                      })
+                    }}>
+                    <Icon
+                      name='user-plus'
+                      type="font-awesome-5"
+                      size={RFValue(35)}
+                      color='#fabf10'
+                    />
+                  </TouchableOpacity>
+                </View>
+                <View style={{ marginTop:RFValue(5) }}>
+                  <TouchableOpacity style={styles.add1}
+                    onPress={() => {
+                      this.setState({
+                        isGroupModal: true
+                      })
+                    }}
+                  >
+                    <Icon
+                      name='users'
+                      type="font-awesome-5"
+                      size={RFValue(35)}
+                      color='#fabf10'
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           )
 
         }
-
-
       </View>
     );
   }

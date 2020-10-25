@@ -133,21 +133,8 @@ export default class ChatScreen extends Component {
         return (
             <Actions
                 options={{
-                    ['Send Image']: async (cancelled, uri) => {
-                        let result = await ImagePicker.launchImageLibraryAsync({
-                            mediaTypes: ImagePicker.MediaTypeOptions.All,
-                            allowsEditing: true,
-                            aspect: [4, 3],
-                            quality: 1,
-                        });
-
-                        console.log(result);
-
-                        if (!cancelled) {
-                            this.loadImage(uri);
-                        }
-
-                        // alert('Dear INBO user Sorry for inconvenience INBO Team working on sending image and video soon you can send image and video')  
+                    ['Send Image']:  () => {
+                        alert('Dear INBO user Sorry for inconvenience INBO Team working on sending image and video soon you can send image and video')  
                     }
                 }
                 }
@@ -361,8 +348,8 @@ export default class ChatScreen extends Component {
                         subtitle={this.state.fContact}
                         titleStyle={{ color: 'black', fontWeight: 'bold' }}
                         leftElement={
-                            <View>                                
-                                <View style={{marginLeft:RFValue(25),marginTop:RFValue(10)}}>
+                            <View>
+                                <View style={{ marginLeft: RFValue(25), marginTop: RFValue(10) }}>
                                     <Avatar
                                         rounded
                                         source={{
@@ -372,14 +359,14 @@ export default class ChatScreen extends Component {
                                         onPress={() => this.props.navigation.goBack()}
                                     />
                                 </View>
-                                <View style={{marginLeft:RFValue(-60),marginTop:RFValue(10)}}>
-                                <Icon
-                                    name="arrow-left"
-                                    type="font-awesome-5"
-                                    //color="#ffffff"
-                                    onPress={() => this.props.navigation.goBack()}
-                                    containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
-                                />
+                                <View style={{ marginLeft: RFValue(-60), marginTop: RFValue(10) }}>
+                                    <Icon
+                                        name="arrow-left"
+                                        type="font-awesome-5"
+                                        //color="#ffffff"
+                                        onPress={() => this.props.navigation.goBack()}
+                                        containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
+                                    />
                                 </View>
                             </View>
                         }
@@ -472,13 +459,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#32867d"
     },
-    label: {
-        fontSize: RFValue(17),
-        color: "#717D7E",
-        fontWeight: 'bold',
-        paddingLeft: RFValue(10),
-        marginLeft: RFValue(20)
-    },
     registerButton: {
         width: "75%",
         height: RFValue(50),
@@ -501,11 +481,5 @@ const styles = StyleSheet.create({
         fontSize: RFValue(23),
         fontWeight: "bold",
         color: "#fff",
-    },
-    cancelButtonText: {
-        fontSize: RFValue(20),
-        fontWeight: 'bold',
-        color: "#32867d",
-        marginTop: RFValue(10)
     },
 })

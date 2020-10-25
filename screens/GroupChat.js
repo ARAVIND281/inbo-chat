@@ -40,7 +40,9 @@ export default class GroupChat extends Component {
             fileUri: '',
             members: [],
             isAboutGroupModalVisible: false,
-            userImage: '#'
+            userImage: '#',
+            total: '',
+            docid:''
         }
     }
 
@@ -52,7 +54,8 @@ export default class GroupChat extends Component {
             .onSnapshot((snapshot) => {
                 var members = snapshot.docs.map((doc) => doc.data())
                 this.setState({
-                    members: members
+                    members: members,
+                    total: snapshot.docs.length,
                 });
             })
     }
@@ -159,6 +162,7 @@ export default class GroupChat extends Component {
                 createdAt: firebase.database.ServerValue.TIMESTAMP,
             });
         }
+        this.updateUserfState()
     }
 
     keyExtractor = (index) => index.toString();
@@ -169,9 +173,19 @@ export default class GroupChat extends Component {
                 key={i}
                 title={item.name}
                 subtitle={item.contact}
+                containerStyle={{ backgroundColor: '#FFFEE0' }}
                 bottomDivider
             />
         )
+    }
+
+    updateUserfState = () => {
+        db.collection(this.state.members.userid + 'group')
+            .doc(this.state.gCode)
+            .update({
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                state: 'unread'
+            });
     }
 
     aboutGroupModal = () => {
@@ -217,6 +231,7 @@ export default class GroupChat extends Component {
                             title={this.state.gAbout}
                             subtitle='About'
                             titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                            containerStyle={{ backgroundColor: '#FFFEE0' }}
                         />
                     </View>
                     <Text
@@ -224,10 +239,11 @@ export default class GroupChat extends Component {
                             fontWeight: "300",
                             fontSize: RFValue(15),
                             padding: RFValue(10),
-                            textAlign: 'left'
+                            textAlign: 'left',
+                            color: '#32867d'
                         }}
                     >
-                        Group Members
+                        {this.state.total} Members are in Group
                     </Text>
                     <FlatList
                         keyExtractor={this.keyExtractor}
@@ -315,8 +331,8 @@ export default class GroupChat extends Component {
                         subtitle={this.state.gAbout}
                         titleStyle={{ color: 'black', fontWeight: 'bold' }}
                         leftElement={
-                            <View>                                
-                                <View style={{marginLeft:RFValue(25),marginTop:RFValue(10)}}>
+                            <View>
+                                <View style={{ marginLeft: RFValue(25), marginTop: RFValue(10) }}>
                                     <Avatar
                                         rounded
                                         source={{
@@ -326,14 +342,14 @@ export default class GroupChat extends Component {
                                         onPress={() => this.props.navigation.goBack()}
                                     />
                                 </View>
-                                <View style={{marginLeft:RFValue(-60),marginTop:RFValue(10)}}>
-                                <Icon
-                                    name="arrow-left"
-                                    type="font-awesome-5"
-                                    //color="#ffffff"
-                                    onPress={() => this.props.navigation.goBack()}
-                                    containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
-                                />
+                                <View style={{ marginLeft: RFValue(-60), marginTop: RFValue(10) }}>
+                                    <Icon
+                                        name="arrow-left"
+                                        type="font-awesome-5"
+                                        //color="#ffffff"
+                                        onPress={() => this.props.navigation.goBack()}
+                                        containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
+                                    />
                                 </View>
                             </View>
                         }
@@ -394,24 +410,6 @@ export default class GroupChat extends Component {
 }
 
 const styles = StyleSheet.create({
-    add1: {
-        width: RFValue(65),
-        height: RFValue(65),
-        marginTop: RFValue(20),
-        justifyContent: "center",
-        alignItems: "center",
-        borderRadius: RFValue(100),
-        backgroundColor: "#a901ff",
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 8,
-        },
-        shadowOpacity: 0.44,
-        shadowRadius: 10.32,
-        elevation: 16,
-        marginTop: RFValue(10),
-    },
     scrollview: {
         flex: 1,
         backgroundColor: "#fff"
@@ -425,13 +423,6 @@ const styles = StyleSheet.create({
         fontSize: RFValue(20),
         fontWeight: "bold",
         color: "#32867d"
-    },
-    label: {
-        fontSize: RFValue(17),
-        color: "#717D7E",
-        fontWeight: 'bold',
-        paddingLeft: RFValue(10),
-        marginLeft: RFValue(20)
     },
     registerButton: {
         width: "75%",
@@ -455,11 +446,5 @@ const styles = StyleSheet.create({
         fontSize: RFValue(23),
         fontWeight: "bold",
         color: "#fff",
-    },
-    cancelButtonText: {
-        fontSize: RFValue(20),
-        fontWeight: 'bold',
-        color: "#32867d",
-        marginTop: RFValue(10)
-    },
+    }
 })
