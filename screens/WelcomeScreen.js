@@ -2,10 +2,8 @@ import React, { Component } from "react";
 import {
     View,
     Text,
-    TextInput,
     Image,
     Modal,
-    KeyboardAvoidingView,
     StyleSheet,
     TouchableOpacity,
     Alert,

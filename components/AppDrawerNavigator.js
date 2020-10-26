@@ -15,7 +15,7 @@ export const AppDrawerNavigator = createDrawerNavigator({
   Setting: {
     screen: SettingScreen,
     navigationOptions: {
-      drawerIcon: <Icon name="user-circle" type="font-awesome-5" solid={true}/>,
+      drawerIcon: <Icon name="user-circle" type="font-awesome-5" solid={true} />,
       drawerLabel: "Profile"
     }
   }

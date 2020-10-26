@@ -4,10 +4,8 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image
 } from "react-native";
 import { DrawerItems } from "react-navigation-drawer";
-import { Avatar } from "react-native-elements";
 import firebase from "firebase";
 import db from "../config";
 import { Icon } from "react-native-elements";
@@ -45,7 +43,7 @@ export default class SideBar extends Component {
         querySnapshot.forEach((doc) => {
           this.setState({
             name: doc.data().first_name + " " + doc.data().last_name,
-            about:doc.data().about,
+            about: doc.data().about,
             docId: doc.id,
             image: doc.data().image,
           });

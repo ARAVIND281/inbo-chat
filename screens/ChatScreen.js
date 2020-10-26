@@ -3,24 +3,17 @@ import {
     Text,
     View,
     StyleSheet,
-    Image,
-    PermissionsAndroid,
     TouchableOpacity,
     Modal,
     ScrollView,
     Alert,
-    FlatList,
-    SafeAreaView,
-    Button
+    ImageBackground
 } from 'react-native';
-import Contacts from 'react-native-contacts';
-import MyHeader from '../components/MyHeader.js';
 import { Icon, Input, ListItem, Avatar } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
 import firebase from 'firebase'
 import db from '../config';
-import { GiftedChat, Bubble, Actions, ActionsProps, } from 'react-native-gifted-chat';
-import NavBar, { NavTitle, NavButton } from 'react-native-nav';
+import { GiftedChat, Actions, Day, } from 'react-native-gifted-chat';
 import * as ImagePicker from "expo-image-picker";
 
 export default class ChatScreen extends Component {
@@ -48,7 +41,9 @@ export default class ChatScreen extends Component {
             filePath: '',
             fileData: '',
             fileUri: '',
-            iseditfriendModalVisible: false
+            iseditfriendModalVisible: false,
+            iseditfriendNameModalVisible: false,
+            refName: ''
         }
     }
 
@@ -133,8 +128,8 @@ export default class ChatScreen extends Component {
         return (
             <Actions
                 options={{
-                    ['Send Image']:  () => {
-                        alert('Dear INBO user Sorry for inconvenience INBO Team working on sending image and video soon you can send image and video')  
+                    ['Send Image']: () => {
+                        alert('Dear INBO user Sorry for inconvenience INBO Team working on sending image and video soon you can send image and video')
                     }
                 }
                 }
@@ -237,7 +232,67 @@ export default class ChatScreen extends Component {
             });
     }
 
+    updateFrendName = async (fname) => {
+        await db.collection(this.state.userid + "friend")
+            .doc(this.state.fid)
+            .update({
+                name: fname
+            })
+    }
 
+    editfriendNameModal = () => {
+        return (
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={this.state.iseditfriendNameModalVisible}
+            >
+                <ScrollView style={[styles.scrollview, { backgroundColor: '#FFFEE0' }]}>
+                    <Text style={styles.label}>Friend's Name</Text>
+                    <Input
+                        style={styles.loginBox}
+                        placeholder={"Name"}
+                        onChangeText={(text) => {
+                            this.setState({
+                                refName: text,
+                            });
+                        }}
+                        leftIcon={
+                            <Icon
+                                name='id-badge'
+                                size={RFValue(35)}
+                                color='#fabf10'
+                                type="font-awesome-5"
+                            />
+                        }
+                    />
+                    <View style={{ alignItems: 'center' }}>
+                        <TouchableOpacity
+                            style={[styles.registerButton, { width: '90%' }]}
+                            onPress={() => {
+
+                                this.updateFrendName(this.state.refName),
+                                    this.setState({
+                                        iseditfriendNameModalVisible: false,
+                                        fName: this.state.refName
+                                    })
+                            }
+                            }
+                        >
+                            <Text style={styles.registerButtonText}>Update Friend Name</Text>
+                        </TouchableOpacity>
+                        <Text
+                            style={styles.cancelButtonText}
+                            onPress={() => {
+                                this.setState({ iseditfriendNameModalVisible: false })
+                            }}
+                        >
+                            Cancel</Text>
+                    </View>
+                </ScrollView>
+            </Modal>
+        );
+    }
 
     editfriendModal = () => {
         return (
@@ -278,6 +333,22 @@ export default class ChatScreen extends Component {
                     </Text>
                     <Text
                         style={{
+                            fontSize: RFValue(15),
+                            padding: RFValue(10),
+                            textAlign: 'center',
+                            color: 'red'
+                        }}
+                        onPress={() => {
+                            this.setState({
+                                iseditfriendNameModalVisible: true,
+                                iseditfriendModalVisible: false
+                            })
+                        }}
+                    >
+                        Edit Friend Name
+                    </Text>
+                    <Text
+                        style={{
                             fontWeight: "300",
                             fontSize: RFValue(15),
                             padding: RFValue(10),
@@ -291,6 +362,7 @@ export default class ChatScreen extends Component {
                             title={this.state.fabout}
                             subtitle='About'
                             titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                            containerStyle={{ backgroundColor: '#FFFEE0' }}
                         />
                     </View>
                     <View style={{ marginTop: RFValue(-20) }}>
@@ -298,6 +370,7 @@ export default class ChatScreen extends Component {
                             title={this.state.fContact}
                             subtitle='Contact Number'
                             titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                            containerStyle={{ backgroundColor: '#FFFEE0' }}
                         />
                     </View>
                     <Text
@@ -341,73 +414,77 @@ export default class ChatScreen extends Component {
     render() {
         return (
             <View style={{ flex: 1, backgroundColor: '#ffefff' }}>
-                {this.editfriendModal()}
-                <View style={{ marginTop: RFValue(10) }}>
-                    <ListItem
-                        title={this.state.fName}
-                        subtitle={this.state.fContact}
-                        titleStyle={{ color: 'black', fontWeight: 'bold' }}
-                        leftElement={
-                            <View>
-                                <View style={{ marginLeft: RFValue(25), marginTop: RFValue(10) }}>
-                                    <Avatar
-                                        rounded
-                                        source={{
-                                            uri: this.state.image,
-                                        }}
-                                        size={RFValue(50)}
-                                        onPress={() => this.props.navigation.goBack()}
-                                    />
+                <ImageBackground source={require('../assets/bg.png')} style={styles.image}>
+                    {this.editfriendModal()}
+                    {this.editfriendNameModal()}
+                    <View style={{ marginTop: RFValue(10) }}>
+                        <ListItem
+                            title={this.state.fName}
+                            subtitle={this.state.fContact}
+                            titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                            leftElement={
+                                <View>
+                                    <View style={{ marginLeft: RFValue(25), marginTop: RFValue(10) }}>
+                                        <Avatar
+                                            rounded
+                                            source={{
+                                                uri: this.state.image,
+                                            }}
+                                            size={RFValue(50)}
+                                            onPress={() => this.props.navigation.goBack()}
+                                        />
+                                    </View>
+                                    <View style={{ marginLeft: RFValue(-60), marginTop: RFValue(10) }}>
+                                        <Icon
+                                            name="arrow-left"
+                                            type="font-awesome-5"
+                                            //color="#ffffff"
+                                            onPress={() => this.props.navigation.goBack()}
+                                            containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
+                                        />
+                                    </View>
                                 </View>
-                                <View style={{ marginLeft: RFValue(-60), marginTop: RFValue(10) }}>
-                                    <Icon
-                                        name="arrow-left"
-                                        type="font-awesome-5"
-                                        //color="#ffffff"
-                                        onPress={() => this.props.navigation.goBack()}
-                                        containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
-                                    />
-                                </View>
-                            </View>
-                        }
-                        rightElement={
-                            <Icon
-                                name="info-circle"
-                                type="font-awesome-5"
-                                size={RFValue(40)}
-                                onPress={() => {
-                                    this.setState({
-                                        iseditfriendModalVisible: true
-                                    })
-                                }}
-                            />
-                        }
+                            }
+                            rightElement={
+                                <Icon
+                                    name="info-circle"
+                                    type="font-awesome-5"
+                                    size={RFValue(40)}
+                                    onPress={() => {
+                                        this.setState({
+                                            iseditfriendModalVisible: true
+                                        })
+                                    }}
+                                />
+                            }
+                        />
+                    </View>
+                    <GiftedChat
+                        messages={this.state.messages}
+                        onSend={(message) => {
+                            this.sendMessage(message);
+                        }}
+                        user={{
+                            _id: this.state.userid,
+                            name: this.state.firstName + '' + this.state.lastName,
+                            avatar: this.state.image2
+                        }}
+                        scrollToBottom
+                        alwaysShowSend={true}
+                        renderUsernameOnMessage={true}
+                        scrollToBottomComponent={() => (
+                            <Icon name='arrow-down' type='font-awesome-5' />
+                        )}
+                        isTyping={true}
+                        isLoadingEarlier={true}
+                        timeTextStyle={{ left: { color: 'green' }, right: { color: 'yellow' } }}
+                        isTyping={true}
+                        infiniteScroll
+                        renderActions={this.renderActions}
+                        showAvatarForEveryMessage={true}
+                        renderDay={this.renderDay}
                     />
-                </View>
-                <GiftedChat
-                    messages={this.state.messages}
-                    onSend={(message) => {
-                        this.sendMessage(message);
-                    }}
-                    user={{
-                        _id: this.state.userid,
-                        name: this.state.firstName + '' + this.state.lastName,
-                        avatar: this.state.image2
-                    }}
-                    scrollToBottom
-                    alwaysShowSend={true}
-                    renderUsernameOnMessage={true}
-                    scrollToBottomComponent={() => (
-                        <Icon name='arrow-down' type='font-awesome-5' />
-                    )}
-                    isTyping={true}
-                    isLoadingEarlier={true}
-                    timeTextStyle={{ left: { color: 'green' }, right: { color: 'yellow' } }}
-                    isTyping={true}
-                    infiniteScroll
-                    renderActions={this.renderActions}
-                    showAvatarForEveryMessage={true}
-                />
+                </ImageBackground>
             </View>
         );
     }
@@ -423,6 +500,9 @@ export default class ChatScreen extends Component {
         this.updateState();
         this.fetchImage(this.state.fEmail);
         this.fetchImage2(this.state.userid);
+    }
+    renderDay(props) {
+        return <Day {...props} textStyle={{ color: '#000', fontWeight: 'bold', fontSize: RFValue(14) }} />
     }
 }
 
@@ -481,5 +561,48 @@ const styles = StyleSheet.create({
         fontSize: RFValue(23),
         fontWeight: "bold",
         color: "#fff",
+    },
+    label: {
+        fontSize: RFValue(17),
+        color: "#717D7E",
+        fontWeight: 'bold',
+        paddingLeft: RFValue(10),
+        marginLeft: RFValue(20)
+    },
+    registerButton: {
+        width: "75%",
+        height: RFValue(50),
+        marginTop: RFValue(20),
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: RFValue(3),
+        backgroundColor: "#32867d",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 8,
+        },
+        shadowOpacity: 0.44,
+        shadowRadius: 10.32,
+        elevation: 16,
+        marginTop: RFValue(10),
+    },
+    registerButtonText: {
+        fontSize: RFValue(23),
+        fontWeight: "bold",
+        color: "#fff",
+    },
+    cancelButtonText: {
+        fontSize: RFValue(20),
+        fontWeight: 'bold',
+        color: "#32867d",
+        marginTop: RFValue(10)
+    },
+    image: {
+        flex: 1,
+        resizeMode: "cover",
+        justifyContent: "center",
+        shadowOpacity: 0.3,
+
     },
 })

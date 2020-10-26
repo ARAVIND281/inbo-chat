@@ -1,4 +1,3 @@
-import React from 'react';
 import { createStackNavigator } from 'react-navigation-stack';
 import BookDonateScreen from '../screens/Contacts';
 import RecieverDetailsScreen from '../screens/ChatScreen';

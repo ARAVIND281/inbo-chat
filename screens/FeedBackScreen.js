@@ -10,7 +10,6 @@ import db from "../config";
 import firebase from "firebase";
 import { RFValue } from "react-native-responsive-fontsize";
 import { Input } from "react-native-elements";
-
 import MyHeader from "../components/MyHeader";
 
 export default class FeedBackScreen extends Component {
@@ -22,8 +21,8 @@ export default class FeedBackScreen extends Component {
             description: "",
             IsBookRequestActive: "",
             docId: "",
-            name:"",
-            contact:""
+            name: "",
+            contact: ""
         };
     }
 
@@ -40,9 +39,10 @@ export default class FeedBackScreen extends Component {
             subject: subject,
             description: description,
             FeedBack_id: randomRequestId,
-            name:this.state.name,
-            contact:this.state.contact,
+            name: this.state.name,
+            contact: this.state.contact,
             date: firebase.firestore.FieldValue.serverTimestamp(),
+            state: 'unread'
         });
 
         return Alert.alert("FeedBack Send Successfully Your FeedBack ID is" + randomRequestId);
@@ -50,19 +50,23 @@ export default class FeedBackScreen extends Component {
 
     getUserDetails = () => {
         db.collection("users")
-          .where("email_id", "==", this.state.userId)
-          .get()
-          .then((snapshot) => {
-            snapshot.forEach((doc) => {
-              var data = doc.data();
-              this.setState({
-                name: data.first_name,
-                contact: data.contact,
-                docId: doc.id,
-              });
+            .where("email_id", "==", this.state.userId)
+            .get()
+            .then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    var data = doc.data();
+                    this.setState({
+                        name: data.first_name,
+                        contact: data.contact,
+                        docId: doc.id,
+                    });
+                });
             });
-          });
-      };
+    };
+
+    componentDidMount() {
+        this.getUserDetails();
+    }
 
     render() {
 
@@ -85,7 +89,7 @@ export default class FeedBackScreen extends Component {
 
                     <View style={{ alignItems: "center" }}>
                         <Input
-                            style={[styles.formTextInput ,{height:RFValue(200)}]}
+                            style={[styles.formTextInput, { height: RFValue(200) }]}
                             containerStyle={{ marginTop: RFValue(30) }}
                             multiline
                             numberOfLines={8}

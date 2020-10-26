@@ -4,25 +4,20 @@ import {
     View,
     StyleSheet,
     Image,
-    PermissionsAndroid,
     TouchableOpacity,
     Modal,
     ScrollView,
     Alert,
     FlatList,
 } from 'react-native';
-import Contacts from 'react-native-contacts';
 import MyHeader from '../components/MyHeader.js';
 import { Icon, Input, ListItem, Avatar } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
 import firebase from 'firebase';
 import db from '../config';
 import * as ImagePicker from "expo-image-picker";
-import * as Permissions from "expo-permissions";
-
 
 export default class GroupScreen extends Component {
-
     constructor() {
         super();
         this.state = {
@@ -54,6 +49,7 @@ export default class GroupScreen extends Component {
             RefName: '',
             groupValue: 'fail',
             friendValue: 'fail',
+            Refcontact: '#'
         };
     }
 
@@ -115,34 +111,43 @@ export default class GroupScreen extends Component {
             this.addGropeMember(id),
             this.addUserGroup(gName, gAbout, id),
             this.addinGroup(gName, gAbout, id),
-            Alert.alert('GROUP ADDED ')
+            Alert.alert('GROUP ADDED')
     }
 
     addinGroup = async (gName, gAbout, id) => {
-        await db.collection('groups').add({
-            name: gName,
-            about: gAbout,
-            created_by: this.state.userid,
-            grope_code: id
-        })
+        await db.collection('groups')
+            .doc(id)
+            .set({
+                name: gName,
+                about: gAbout,
+                created_by: this.state.userid,
+                grope_code: id
+            })
     }
 
     addGropeMember = async (gName) => {
-        await db.collection(gName + 'groupmember').add({
-            name: this.state.name,
-            contact: this.state.contact,
-            about: this.state.about,
-            userid: this.state.userid,
-            grope_code: gName
-        })
+        await db.collection(gName + 'groupmember')
+            .doc(this.state.userid)
+            .set({
+                name: this.state.name,
+                contact: this.state.contact,
+                about: this.state.about,
+                userid: this.state.userid,
+                grope_code: gName,
+                Memberstate: 'admin'
+            })
     }
 
     addUserGroup = async (gName, gAbout, id) => {
-        await db.collection(this.state.userid + "group").add({
-            group_name: gName,
-            group_about: gAbout,
-            group_code: id
-        })
+        await db.collection(this.state.userid + "group")
+            .doc(this.state.userid)
+            .set({
+                group_name: gName,
+                group_about: gAbout,
+                group_code: id,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                state: 'read'
+            })
     }
 
     joinGroup = (jgCode) => {
@@ -185,43 +190,67 @@ export default class GroupScreen extends Component {
     }
 
     addinUserGroup = async (jgName, jgAbout, id) => {
-        await db.collection(this.state.userid + "group").add({
-            group_name: jgName,
-            group_about: jgAbout,
-            group_code: id
-        })
+        await db.collection(this.state.userid + "group")
+            .doc(id)
+            .set({
+                group_name: jgName,
+                group_about: jgAbout,
+                group_code: id,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                state: 'read'
+            })
     }
 
-    addinGroupMember = async (id) => {
-        await db.collection(id + 'groupmember').add({
-            name: this.state.name,
-            contact: this.state.contact,
-            about: this.state.about,
-            userid: this.state.userid
-        })
+    addinGroupMember = async (jgName) => {
+        await db.collection(jgName + 'groupmember')
+            .doc(this.state.userid)
+            .set({
+                name: this.state.name,
+                contact: this.state.contact,
+                about: this.state.about,
+                userid: this.state.userid,
+                Memberstate: 'member'
+            })
     }
 
     getFriendDetails = async (fContact) => {
-        var friendid = this.createUniqueId()
-        await db.collection("users")
+        db.collection(this.state.userid + 'friend')
             .where("contact", "==", fContact)
             .get()
             .then((snapshot) => {
                 snapshot.forEach((doc) => {
                     var data = doc.data();
                     this.setState({
-                        fEmail: data.email_id,
-                        fabout: data.about,
-                        docId: doc.id,
-                        friendValue: 'pass',
+                        Refcontact: data.contact,
                     });
-                    this.addFriend(this.state.fEmail, this.state.fabout, friendid),
-                        this.addFriendslist(friendid)
                 });
-            });
-        if (this.state.friendValue === 'fail') {
-            alert('This number is not registered in the INBO CHAT.Ask your friend to register in the APP')
-        }
+
+                if (fContact === this.state.Refcontact) {
+                    Alert.alert('Your already in ' + this.state.Refcontact + ' friend')
+                }
+                else if (fContact !== this.state.Refcontact) {
+                    var friendid = this.createUniqueId()
+                    db.collection("users")
+                        .where("contact", "==", fContact)
+                        .get()
+                        .then((snapshot) => {
+                            snapshot.forEach((doc) => {
+                                var data = doc.data();
+                                this.setState({
+                                    fEmail: data.email_id,
+                                    fabout: data.about,
+                                    docId: doc.id,
+                                    friendValue: 'pass',
+                                });
+                                this.addFriend(this.state.fEmail, this.state.fabout, friendid),
+                                    this.addFriendslist(friendid)
+                            });
+                        });
+                }
+                else if (this.state.friendValue === 'fail') {
+                    alert('This number is not registered in the INBO CHAT.Ask your friend to register in the APP')
+                }
+            })
     }
 
     addFriend = async (email_id, about) => {
@@ -251,14 +280,16 @@ export default class GroupScreen extends Component {
             });
     };
 
-    addFriendslist = async () => {
-        await db.collection(this.state.fEmail + 'friend').add({
-            name: this.state.fContact,
-            contact: this.state.fContact,
-            email_id: this.state.userid,
-            about: this.state.about,
-            friendid: this.createUniqueId()
-        })
+    addFriendslist = async (id) => {
+        await db.collection(this.state.fEmail + 'friend')
+            .doc(id)
+            .set({
+                name: this.state.fContact,
+                contact: this.state.fContact,
+                email_id: this.state.userid,
+                about: this.state.about,
+                friendid: id
+            })
         Alert.alert('Friend Added Successfully')
     }
 
@@ -483,7 +514,7 @@ export default class GroupScreen extends Component {
                     </View>
                     <View style={{ flex: 0.95 }}>
                         <Text style={styles.label}>Group Code</Text>
-                        {this.state.jgCode.length !== 6 ? (
+                        {this.state.jgCode.length <= 4 ? (
                             <Input
                                 style={styles.loginBox}
                                 maxLength={6}
@@ -527,7 +558,7 @@ export default class GroupScreen extends Component {
                             <TouchableOpacity
                                 style={styles.registerButton}
                                 onPress={() => {
-                                    this.state.jgCode.length !== 6 ? (
+                                    this.state.jgCode.length <= 4 ? (
                                         Alert.alert('Enter a Valid Group Code')
                                     ) : (
                                             this.joinGroup(this.state.jgCode),
@@ -623,8 +654,6 @@ export default class GroupScreen extends Component {
         );
     }
 
-
-
     keyExtractor = (index) => index.toString()
 
     renderItem = ({ item, i }) => {
@@ -680,7 +709,11 @@ export default class GroupScreen extends Component {
                         <View>
                             {
                                 this.state.groups.length === 0 ? (
-                                    <Text>You are not in any Group</Text>
+                                    <View style={styles.imageView}>
+                                        <Image
+                                            source={require('../assets/Notification.png')} />
+                                        <Text style={{ fontSize: 25 }}>You are not in any Group</Text>
+                                    </View>
                                 ) : (
                                         <FlatList
                                             keyExtractor={this.keyExtractor}
@@ -769,6 +802,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         paddingLeft: RFValue(10),
         marginLeft: RFValue(20)
+    },
+    imageView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: RFValue(250)
     },
     registerButton: {
         width: "75%",

@@ -1,4 +1,3 @@
-import React from 'react';
 import { createStackNavigator } from 'react-navigation-stack';
 import GroupScreen from '../screens/GroupScreen'
 import GroupChat from '../screens/GroupChat';

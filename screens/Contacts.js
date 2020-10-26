@@ -4,21 +4,18 @@ import {
   View,
   StyleSheet,
   Image,
-  PermissionsAndroid,
   TouchableOpacity,
   Modal,
   ScrollView,
   Alert,
   FlatList,
 } from 'react-native';
-import Contacts from 'react-native-contacts';
 import MyHeader from '../components/MyHeader.js';
 import { Icon, Input, ListItem, Avatar, Badge } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
 import firebase from 'firebase'
 import db from '../config'
 import * as ImagePicker from "expo-image-picker";
-import * as Permissions from "expo-permissions";
 
 export default class ContactsScreen extends Component {
   constructor() {
@@ -50,6 +47,9 @@ export default class ContactsScreen extends Component {
       refgCode: '',
       groupValue: 'fail',
       friendValue: 'fail',
+      RefCode: '#',
+      RefName: '',
+      Refcontact: '#'
     };
   }
 
@@ -97,23 +97,6 @@ export default class ContactsScreen extends Component {
       });
   };
 
-  getPermissions = () => {
-    PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-      {
-        'title': 'Contacts',
-        'message': 'This app would like to view your contacts.',
-        'buttonPositive': 'Please accept bare mortal'
-      }
-    )
-      .then(Contacts.getAll)
-      .then(contacts => {
-        this.setState({
-          contacts: contacts
-        })
-      })
-  }
-
   incrementCounter = () => {
     this.setState({
       counter: this.state.counter + 1,
@@ -125,26 +108,43 @@ export default class ContactsScreen extends Component {
   }
 
   getFriendDetails = async (fContact) => {
-    var friendid = this.createUniqueId()
-    await db.collection("users")
+    db.collection(this.state.userid + 'friend')
       .where("contact", "==", fContact)
       .get()
       .then((snapshot) => {
         snapshot.forEach((doc) => {
           var data = doc.data();
           this.setState({
-            fEmail: data.email_id,
-            fabout: data.about,
-            docId: doc.id,
-            friendValue: 'pass',
+            Refcontact: data.contact,
           });
-          this.addFriend(this.state.fEmail, this.state.fabout, friendid),
-          this.addFriendslist(friendid)
         });
-      });
-      if (this.state.friendValue === 'fail') {
-        alert('This number is not registered in the INBO CHAT.Ask your friend to register in the APP')
-      }
+
+        if (fContact === this.state.Refcontact) {
+          Alert.alert('Your already in ' + this.state.Refcontact + ' friend')
+        }
+        else if (fContact !== this.state.Refcontact) {
+          var friendid = this.createUniqueId()
+          db.collection("users")
+            .where("contact", "==", fContact)
+            .get()
+            .then((snapshot) => {
+              snapshot.forEach((doc) => {
+                var data = doc.data();
+                this.setState({
+                  fEmail: data.email_id,
+                  fabout: data.about,
+                  docId: doc.id,
+                  friendValue: 'pass',
+                });
+                this.addFriend(this.state.fEmail, this.state.fabout, friendid),
+                  this.addFriendslist(friendid)
+              });
+            });
+        }
+        else if (this.state.friendValue === 'fail') {
+          alert('This number is not registered in the INBO CHAT.Ask your friend to register in the APP')
+        }
+      })
   }
 
   addFriend = async (email_id, about, id) => {
@@ -287,29 +287,37 @@ export default class ContactsScreen extends Component {
   }
 
   addinGroup = async (gName, gAbout, id) => {
-    await db.collection('groups').add({
-      name: gName,
-      about: gAbout,
-      created_by: this.state.userid,
-      grope_code: id
-    })
+    await db.collection('groups')
+      .doc(id)
+      .set({
+        name: gName,
+        about: gAbout,
+        created_by: this.state.userid,
+        grope_code: id
+      })
   }
 
   addGropeMember = async (gName) => {
-    await db.collection(gName + 'groupmember').add({
-      name: this.state.name,
-      contact: this.state.contact,
-      about: this.state.about,
-      userid: this.state.userid
-    })
+    await db.collection(gName + 'groupmember')
+      .doc(this.state.userid)
+      .set({
+        name: this.state.name,
+        contact: this.state.contact,
+        about: this.state.about,
+        userid: this.state.userid,
+        grope_code: gName,
+        Memberstate: 'admin'
+      })
   }
 
   addUserGroup = async (gName, gAbout, id) => {
-    await db.collection(this.state.userid + "group").add({
-      group_name: gName,
-      group_about: gAbout,
-      Group_code: id
-    })
+    await db.collection(this.state.userid + "group")
+      .doc(this.state.userid)
+      .set({
+        group_name: gName,
+        group_about: gAbout,
+        group_code: id
+      })
   }
 
   joinGroup = (jgCode) => {
@@ -351,24 +359,30 @@ export default class ContactsScreen extends Component {
       });
   }
 
-  addinUserGroup = async (jgName, jgAbout) => {
-    await db.collection(this.state.userid + "group").add({
-      group_name: jgName,
-      group_about: jgAbout
-    })
+  addinUserGroup = async (jgName, jgAbout, id) => {
+    await db.collection(this.state.userid + "group")
+      .doc(id)
+      .set({
+        group_name: jgName,
+        group_about: jgAbout,
+        group_code: id
+      })
   }
 
   addinGroupMember = async (jgName) => {
-    await db.collection(jgName + 'groupmember').add({
-      name: this.state.name,
-      contact: this.state.contact,
-      about: this.state.about,
-      userid: this.state.userid
-    })
+    await db.collection(jgName + 'groupmember')
+      .doc(this.state.userid)
+      .set({
+        name: this.state.name,
+        contact: this.state.contact,
+        about: this.state.about,
+        userid: this.state.userid,
+        Memberstate: 'member'
+      })
   }
 
   componentDidMount() {
-    setInterval(this.incrementCounter, 500);
+    setInterval(this.incrementCounter, 1000);
     this.getUserDetails();
     this.getFriends();
   }
@@ -467,7 +481,7 @@ export default class ContactsScreen extends Component {
           </View>
           <View style={{ flex: 0.95 }}>
             <Text style={styles.label}>Group Code</Text>
-            {this.state.jgCode.length !== 6 ? (
+            {this.state.jgCode.length <= 4 ? (
               <Input
                 style={styles.loginBox}
                 maxLength={6}
@@ -511,7 +525,7 @@ export default class ContactsScreen extends Component {
               <TouchableOpacity
                 style={styles.registerButton}
                 onPress={() => {
-                  this.state.jgCode.length !== 6 ? (
+                  this.state.jgCode.length <= 4 ? (
                     Alert.alert('Enter a Valid Group Code')
                   ) : (
                       this.joinGroup(this.state.jgCode),
@@ -744,7 +758,11 @@ export default class ContactsScreen extends Component {
                 <View>
                   {
                     this.state.friends.length === 0 ? (
-                      <Text>You have no Friend</Text>
+                      <View style={styles.imageView}>
+                        <Image
+                          source={require('../assets/Notification.png')} />
+                        <Text style={{ fontSize: 25 }}>You have no Friend</Text>
+                      </View>
                     ) : (
                         <FlatList
                           keyExtractor={this.keyExtractor}
@@ -757,7 +775,7 @@ export default class ContactsScreen extends Component {
 
               </View>
               <View>
-                <View style={{ marginTop:RFValue(-150) }}>
+                <View style={{ marginTop: RFValue(-150) }}>
                   <TouchableOpacity style={styles.add1}
                     onPress={() => {
                       this.setState({
@@ -772,7 +790,7 @@ export default class ContactsScreen extends Component {
                     />
                   </TouchableOpacity>
                 </View>
-                <View style={{ marginTop:RFValue(5) }}>
+                <View style={{ marginTop: RFValue(5) }}>
                   <TouchableOpacity style={styles.add1}
                     onPress={() => {
                       this.setState({
@@ -816,6 +834,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10.32,
     elevation: 16,
     marginTop: RFValue(10),
+  },
+  imageView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: RFValue(250)
   },
   scrollview: {
     flex: 1,

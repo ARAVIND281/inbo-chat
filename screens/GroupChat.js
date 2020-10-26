@@ -3,21 +3,19 @@ import {
     Text,
     View,
     StyleSheet,
-    Image,
-    PermissionsAndroid,
     TouchableOpacity,
     Modal,
     ScrollView,
     Alert,
     FlatList,
-    SafeAreaView,
+    ImageBackground
 } from 'react-native';
-import { Icon, Input, ListItem, Header, Avatar } from 'react-native-elements';
+import { Icon, ListItem, Header, Avatar } from 'react-native-elements';
 import { RFValue } from 'react-native-responsive-fontsize';
 import firebase from 'firebase';
 import db from '../config';
-import { GiftedChat, Bubble, Actions, ActionsProps, } from 'react-native-gifted-chat';
-import NavBar, { NavTitle, NavButton } from 'react-native-nav';
+import { GiftedChat, Actions, Day } from 'react-native-gifted-chat';
+import * as ImagePicker from "expo-image-picker";
 
 export default class GroupChat extends Component {
     constructor(props) {
@@ -42,7 +40,8 @@ export default class GroupChat extends Component {
             isAboutGroupModalVisible: false,
             userImage: '#',
             total: '',
-            docid:''
+            docid: '',
+            usergroupstate: ''
         }
     }
 
@@ -51,6 +50,7 @@ export default class GroupChat extends Component {
 
     getGroupMember = () => {
         this.memberRef = db.collection(this.state.gCode + "groupmember")
+            .orderBy('Memberstate', 'asc')
             .onSnapshot((snapshot) => {
                 var members = snapshot.docs.map((doc) => doc.data())
                 this.setState({
@@ -58,6 +58,53 @@ export default class GroupChat extends Component {
                     total: snapshot.docs.length,
                 });
             })
+    }
+
+    selectPicture = async () => {
+        const { cancelled, uri } = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!cancelled) {
+            this.uploadImage(uri, this.state.gCode);
+        }
+    }
+
+    uploadImage = async (uri, imageName) => {
+        var response = await fetch(uri);
+        var blob = await response.blob();
+
+        var ref = firebase
+            .storage()
+            .ref()
+            .child("group_profiles/" + imageName);
+
+        return ref.put(blob).then((response) => {
+            this.fetchImage(imageName);
+        });
+    };
+
+    exitGroup = async () => {
+        await db.collection(this.state.gCode + 'groupmember').doc(this.state.userid).delete();
+        await db.collection(this.state.userid + 'group').doc(this.state.gCode).delete();
+        this.props.navigation.goBack()
+    }
+
+    getusergroupstate = () => {
+        db.collection(this.state.gCode + 'groupmember')
+            .where("userid", "==", this.state.userid)
+            .get()
+            .then((snapshot) => {
+                snapshot.forEach((doc) => {
+                    var data = doc.data();
+                    this.setState({
+                        usergroupstate: data.Memberstate,
+                    });
+                });
+            });
     }
 
     getUserDetails = () => {
@@ -151,8 +198,17 @@ export default class GroupChat extends Component {
                 },
             });
         };
-        this.messagesRef.limitToLast(20).on('child_added', onReceive);
+        this.messagesRef.limitToLast(90000000).on('child_added', onReceive);
     };
+
+    updateUserfState = () => {
+        db.collection(this.state.members.userid + 'group')
+            .doc(this.state.gCode)
+            .update({
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                state: 'unread'
+            });
+    }
 
     sendMessage(message) {
         for (let i = 0; i < message.length; i++) {
@@ -175,17 +231,16 @@ export default class GroupChat extends Component {
                 subtitle={item.contact}
                 containerStyle={{ backgroundColor: '#FFFEE0' }}
                 bottomDivider
+                rightElement={
+                    <Text
+                        style={{
+                            color: '#32867d',
+                            fontWeight: 'bold'
+                        }}
+                    >{item.Memberstate.toUpperCase().trim()}</Text>
+                }
             />
         )
-    }
-
-    updateUserfState = () => {
-        db.collection(this.state.members.userid + 'group')
-            .doc(this.state.gCode)
-            .update({
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                state: 'unread'
-            });
     }
 
     aboutGroupModal = () => {
@@ -206,19 +261,39 @@ export default class GroupChat extends Component {
                             alignItems: "center",
                             marginTop: 20
                         }}
-                    >
-                        <Avatar
-                            rounded
-                            source={{
-                                uri: this.state.image,
-                            }}
-                            size={RFValue(200)}
+                    >{this.state.usergroupstate === 'admin' ? (
+                        <View>
+                            <Avatar
+                                rounded
+                                source={{
+                                    uri: this.state.image,
+                                }}
+                                size={RFValue(200)}
+                                onPress={() => this.selectPicture()}
+                                showEditButton
+                            />
 
-                        />
+
+                            <View style={{ marginTop: -30, alignItems: 'flex-end', marginLeft: RFValue(133) }}>
+                                <Icon name='camera-retro' type='font-awesome-5' color="#fabf10" solid={true} />
+                            </View>
+                        </View>
+                    ) : (
+                            <Avatar
+                                rounded
+                                source={{
+                                    uri: this.state.image,
+                                }}
+                                size={RFValue(200)}
+                            />
+                        )
+
+                        }
+
                     </View>
                     <Text
                         style={{
-                            fontWeight: "300",
+                            fontWeight: "bold",
                             fontSize: RFValue(20),
                             padding: RFValue(10),
                             textAlign: 'center'
@@ -240,7 +315,8 @@ export default class GroupChat extends Component {
                             fontSize: RFValue(15),
                             padding: RFValue(10),
                             textAlign: 'left',
-                            color: '#32867d'
+                            color: '#32867d',
+                            fontWeight: 'bold'
                         }}
                     >
                         {this.state.total} Members are in Group
@@ -305,6 +381,33 @@ export default class GroupChat extends Component {
                     </Text>
                     <View style={{ alignItems: 'center' }}>
                         <TouchableOpacity
+                            style={{
+                                height: RFValue(100),
+                                justifyContent: "center",
+                                alignItems: "center",
+                                borderRadius: RFValue(5),
+                            }}
+                            onPress={() => {
+                                {
+                                    this.state.usergroupstate === 'admin' ? (
+                                        Alert.alert("Your are grour Admin so you can't exit the group")
+                                    ) : (
+                                            this.exitGroup()
+                                        )
+
+                                }
+                            }}
+                        >
+                            <Header
+                                centerComponent={{ text: 'EXIT GROUP', style: { color: 'red', fontSize: 20, fontWeight: "bold" } }}
+                                leftComponent={<Icon name='door-open' type='font-awesome-5' color='red' solid={true} style={{ marginLeft: RFValue(40) }} />}
+                                backgroundColor="#FFFEE0"
+                            />
+
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{ alignItems: 'center' }}>
+                        <TouchableOpacity
                             style={styles.registerButton}
                             onPress={() => {
                                 this.setState({
@@ -324,73 +427,77 @@ export default class GroupChat extends Component {
     render() {
         return (
             <View style={{ flex: 1, backgroundColor: '#ffefff' }}>
-                {this.aboutGroupModal()}
-                <View style={{ marginTop: RFValue(10) }}>
-                    <ListItem
-                        title={this.state.gName}
-                        subtitle={this.state.gAbout}
-                        titleStyle={{ color: 'black', fontWeight: 'bold' }}
-                        leftElement={
-                            <View>
-                                <View style={{ marginLeft: RFValue(25), marginTop: RFValue(10) }}>
-                                    <Avatar
-                                        rounded
-                                        source={{
-                                            uri: this.state.image,
-                                        }}
-                                        size={RFValue(50)}
-                                        onPress={() => this.props.navigation.goBack()}
-                                    />
+                <ImageBackground source={require('../assets/bg.png')} style={styles.image}>
+
+                    {this.aboutGroupModal()}
+                    <View style={{ marginTop: RFValue(10) }}>
+                        <ListItem
+                            title={this.state.gName}
+                            subtitle={this.state.gAbout}
+                            titleStyle={{ color: 'black', fontWeight: 'bold' }}
+                            leftElement={
+                                <View>
+                                    <View style={{ marginLeft: RFValue(25), marginTop: RFValue(10) }}>
+                                        <Avatar
+                                            rounded
+                                            source={{
+                                                uri: this.state.image,
+                                            }}
+                                            size={RFValue(50)}
+                                            onPress={() => this.props.navigation.goBack()}
+                                        />
+                                    </View>
+                                    <View style={{ marginLeft: RFValue(-60), marginTop: RFValue(10) }}>
+                                        <Icon
+                                            name="arrow-left"
+                                            type="font-awesome-5"
+                                            //color="#ffffff"
+                                            onPress={() => this.props.navigation.goBack()}
+                                            containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
+                                        />
+                                    </View>
                                 </View>
-                                <View style={{ marginLeft: RFValue(-60), marginTop: RFValue(10) }}>
-                                    <Icon
-                                        name="arrow-left"
-                                        type="font-awesome-5"
-                                        //color="#ffffff"
-                                        onPress={() => this.props.navigation.goBack()}
-                                        containerStyle={{ position: 'absolute', top: RFValue(-45), right: RFValue(60) }}
-                                    />
-                                </View>
-                            </View>
-                        }
-                        rightElement={
-                            <Icon
-                                name="info-circle"
-                                type="font-awesome-5"
-                                size={RFValue(40)}
-                                onPress={() => {
-                                    this.setState({
-                                        isAboutGroupModalVisible: true
-                                    })
-                                }}
-                            />
-                        }
+                            }
+                            rightElement={
+                                <Icon
+                                    name="info-circle"
+                                    type="font-awesome-5"
+                                    size={RFValue(40)}
+                                    onPress={() => {
+                                        this.setState({
+                                            isAboutGroupModalVisible: true
+                                        })
+                                    }}
+                                />
+                            }
+                        />
+                    </View>
+                    <GiftedChat
+                        messages={this.state.messages}
+                        onSend={(message) => {
+                            this.sendMessage(message);
+                        }}
+                        user={{
+                            _id: this.state.userid,
+                            name: this.state.firstName + '' + this.state.lastName,
+                            avatar: this.state.userImage
+                        }}
+                        scrollToBottom
+                        alwaysShowSend={true}
+                        renderUsernameOnMessage={true}
+                        scrollToBottomComponent={() => (
+                            <Icon name='arrow-down' type='font-awesome-5' />
+                        )}
+                        isTyping={true}
+                        isLoadingEarlier={true}
+                        timeTextStyle={{ left: { color: 'green' }, right: { color: 'yellow' } }}
+                        isTyping={true}
+                        infiniteScroll
+                        renderActions={this.renderActions}
+                        showAvatarForEveryMessage={true}
+                        renderDay={this.renderDay}
                     />
-                </View>
-                <GiftedChat
-                    messages={this.state.messages}
-                    onSend={(message) => {
-                        this.sendMessage(message);
-                    }}
-                    user={{
-                        _id: this.state.userid,
-                        name: this.state.firstName + '' + this.state.lastName,
-                        avatar: this.state.userImage
-                    }}
-                    scrollToBottom
-                    alwaysShowSend={true}
-                    renderUsernameOnMessage={true}
-                    scrollToBottomComponent={() => (
-                        <Icon name='arrow-down' type='font-awesome-5' />
-                    )}
-                    isTyping={true}
-                    isLoadingEarlier={true}
-                    timeTextStyle={{ left: { color: 'green' }, right: { color: 'yellow' } }}
-                    isTyping={true}
-                    infiniteScroll
-                    renderActions={this.renderActions}
-                    showAvatarForEveryMessage={true}
-                />
+                </ImageBackground>
             </View>
         );
     }
@@ -406,9 +513,12 @@ export default class GroupChat extends Component {
         this.getGroupMember();
         this.fetchImage(this.state.gCode);
         this.fetchImage2(this.state.userid);
+        this.getusergroupstate();
+    }
+    renderDay(props) {
+        return <Day {...props} textStyle={{ color: '#000', fontWeight: 'bold', fontSize: RFValue(14) }} />
     }
 }
-
 const styles = StyleSheet.create({
     scrollview: {
         flex: 1,
@@ -446,5 +556,12 @@ const styles = StyleSheet.create({
         fontSize: RFValue(23),
         fontWeight: "bold",
         color: "#fff",
-    }
+    },
+    image: {
+        flex: 1,
+        resizeMode: "cover",
+        justifyContent: "center",
+        shadowOpacity: 0.3,
+
+    },
 })

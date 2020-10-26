@@ -2,21 +2,18 @@ import React, { Component } from "react";
 import {
     View,
     Text,
-    Image,
     Modal,
-    KeyboardAvoidingView,
     StyleSheet,
     TouchableOpacity,
     Alert,
     ScrollView,
 } from "react-native";
-import { Card, Input, Icon, Avatar } from "react-native-elements";
+import { Input, Icon, Avatar } from "react-native-elements";
 import MyHeader from "../components/MyHeader";
 import db from "../config";
 import firebase from "firebase";
 import { RFValue } from "react-native-responsive-fontsize";
 import * as ImagePicker from "expo-image-picker";
-import * as Permissions from "expo-permissions";
 
 export default class SettingScreen extends Component {
     constructor() {
@@ -36,7 +33,7 @@ export default class SettingScreen extends Component {
             image: '#',
             name: "",
             docId: "",
-            Refcontact:'',
+            Refcontact: '',
         };
     }
 
